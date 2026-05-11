@@ -96,6 +96,24 @@ const router = createRouter({
       component: () => import('../views/RolesView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/roles/create',
+      name: 'roles.create',
+      component: () => import('../views/RoleCreateView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/roles/:id/edit',
+      name: 'roles.edit',
+      component: () => import('../views/RoleEditView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/roles/:id/members',
+      name: 'roles.members',
+      component: () => import('../views/RoleMembersView.vue'),
+      meta: { requiresAuth: true },
+    },
     // ── CMS 頁面編輯器（全頁，無 AdminLayout 側邊欄）──
     {
       path: '/editor',
