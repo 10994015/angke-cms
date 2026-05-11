@@ -113,7 +113,7 @@ const handleLogin = async () => {
         <p class="brand-desc">後台管理系統</p>
       </div>
       <div class="brand-footer">
-        <p>© 2025 昂科 CMS. All rights reserved.</p>
+        <p>© 2025 Angke On Prem. All rights reserved.</p>
       </div>
     </div>
 
