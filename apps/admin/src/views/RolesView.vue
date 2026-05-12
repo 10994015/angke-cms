@@ -125,7 +125,7 @@ onMounted(() => load(1))
           </tr>
         </thead>
         <tbody>
-          <tr v-for="role in roles" :key="role.roleId" class="table-row" @click="router.push({ path: `/roles/${role.roleId}/edit`, state: { role } })">
+          <tr v-for="role in roles" :key="role.roleId">
             <td>
               <div class="role-cell">
                 <div class="role-icon">
@@ -143,7 +143,7 @@ onMounted(() => load(1))
             <td class="center-text">{{ role.permissions?.length || 0 }}</td>
             <td class="center-text">{{ role.users?.length ?? 0 }}</td>
             <td class="dim-text">{{ formatDate(role.createdAt) }}</td>
-            <td @click.stop>
+            <td>
               <button class="btn-edit" @click="router.push({ path: `/roles/${role.roleId}/edit`, state: { role } })">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
@@ -156,7 +156,7 @@ onMounted(() => load(1))
       </table>
 
       <!-- 分頁 -->
-      <div v-if="totalPages > 1" class="pagination">
+      <div v-if="!loading" class="pagination">
         <button class="page-btn" :disabled="page <= 1" @click="load(page - 1)">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
             <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -311,10 +311,7 @@ onMounted(() => load(1))
     vertical-align: middle;
   }
   tr:last-child td { border-bottom: none; }
-  .table-row {
-    cursor: pointer;
-    &:hover td { background: #fafafa; }
-  }
+  tbody tr:hover td { background: #fafafa; }
 }
 
 .role-cell {
@@ -353,6 +350,7 @@ onMounted(() => load(1))
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
   padding: 5px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;

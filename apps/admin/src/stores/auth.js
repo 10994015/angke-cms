@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axiosClient from '../axios'
+import axiosClient, { resetHandling401 } from '../axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -69,9 +69,6 @@ export const useAuthStore = defineStore('auth', () => {
     hasDesignerPermission.value = false
     isInitialized.value = false
     if (message) console.warn(message)
-    if (window.location.pathname !== '/login') {
-      window.location.href = '/login'
-    }
   }
 
   const formatDateTime = (dateString) => {
@@ -104,6 +101,8 @@ export const useAuthStore = defineStore('auth', () => {
         systemPermissions.value = data.systemPermissions || []
         templeRoles.value = data.tenantRoles || []
         hasDesignerPermission.value = !!data.hasDesignerPermission
+        isInitialized.value = true
+        resetHandling401()
         return { success: true, statusCode: response.status, data }
       }
     } catch (error) {
@@ -158,6 +157,8 @@ export const useAuthStore = defineStore('auth', () => {
         systemPermissions.value = data.systemPermissions || []
         templeRoles.value = data.tenantRoles || []
         hasDesignerPermission.value = !!data.hasDesignerPermission
+        isInitialized.value = true
+        resetHandling401()
         return { success: true, statusCode: response.status, data }
       }
     } catch (error) {

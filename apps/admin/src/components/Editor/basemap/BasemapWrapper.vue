@@ -1,19 +1,20 @@
 <template>
   <div class="basemap-wrap">
-    <div class="basemap-content">
+    <div class="basemap-content" :style="bgStyle">
       <slot />
     </div>
 
     <!-- 浮動控制列 -->
     <div class="basemap-ctrl" @mouseenter="isHovered = true" @mouseleave="isHovered = false">
       <div class="ctrl-bar">
-        <button class="ctrl-btn" :disabled="!canMoveUp" @click="$emit('move-basemap', { fromIndex: index, direction: 'up' })" title="上移區塊">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-        </button>
-        <button class="ctrl-btn" :disabled="!canMoveDown" @click="$emit('move-basemap', { fromIndex: index, direction: 'down' })" title="下移區塊">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-        </button>
-        <div class="ctrl-sep" />
+        <template v-if="!disableMove">
+          <button class="ctrl-btn" :disabled="!canMoveUp" @click="$emit('move-basemap', { fromIndex: index, direction: 'up' })" title="上移區塊">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+          <button class="ctrl-btn" :disabled="!canMoveDown" @click="$emit('move-basemap', { fromIndex: index, direction: 'down' })" title="下移區塊">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+          </button>
+        </template>
         <button class="ctrl-btn ctrl-btn--add" @click="$emit('add-basemap', index)" title="在此插入新區塊">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>新增區塊</span>
@@ -167,6 +168,7 @@ const props = defineProps({
   basemap:       { type: Object,  default: null },
   totalBasemaps: { type: Number,  required: true },
   isDeletable:   { type: Boolean, default: true },
+  disableMove:   { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['add-basemap', 'delete-basemap', 'move-basemap'])
@@ -183,6 +185,12 @@ const canMoveDown = computed(() => props.index < props.totalBasemaps - 1)
 const desktopRequired = computed(() =>
   !backgrounds.value.desktop && (!!backgrounds.value.tablet || !!backgrounds.value.mobile)
 )
+
+const bgStyle = computed(() => {
+  const src = backgrounds.value[store.currentDevice] || backgrounds.value.desktop
+  if (!src) return {}
+  return { backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+})
 
 watch(() => props.basemap, (bm) => {
   if (bm) {
@@ -208,9 +216,10 @@ const applyUpload = (type, file) => {
   if (!props.basemap) return
   const m = { desktop: ['bgPcImgSrc','bgPcImgId'], tablet: ['bgTabletImgSrc','bgTabletImgId'], mobile: ['bgPhoneImgSrc','bgPhoneImgId'] }
   const [srcKey, idKey] = m[type]
-  props.basemap[srcKey]     = file.fileUrl
+  const url = file.fileDir || file.fileUrl
+  props.basemap[srcKey]     = url
   props.basemap[idKey]      = file.id
-  backgrounds.value[type]   = file.fileUrl
+  backgrounds.value[type]   = url
 }
 
 const uploadImage = (type) => {

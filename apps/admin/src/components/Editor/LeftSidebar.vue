@@ -1,26 +1,26 @@
 <template>
-  <aside class="left-sidebar" :class="{ 'is-collapsed': collapsed }">
+  <aside
+    class="left-sidebar"
+    :class="{ 'is-collapsed': isCollapsed }"
+    @mouseenter="hovered = true"
+    @mouseleave="hovered = false"
+  >
     <div class="tabs">
-      <button class="sidebar-toggle-btn" @click="collapsed = !collapsed" :title="collapsed ? '展開側欄' : '收合側欄'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline :points="collapsed ? '9 18 15 12 9 6' : '15 18 9 12 15 6'"/>
-        </svg>
-      </button>
       <button class="tab" :class="{ active: activeTab === 'system-frames' }" @click="selectTab('system-frames')" title="功能總覽">
-        <svg v-if="!collapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <svg v-if="!isCollapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         <span>功能總覽</span>
       </button>
       <button class="tab" :class="{ active: activeTab === 'frames' }" @click="selectTab('frames')" title="版面配置">
-        <svg v-if="!collapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        <svg v-if="!isCollapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
         <span>版面配置</span>
       </button>
       <button class="tab" :class="{ active: activeTab === 'elements' }" @click="selectTab('elements')" title="元件">
-        <svg v-if="!collapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
+        <svg v-if="!isCollapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
         <span>元件</span>
       </button>
     </div>
 
-    <div v-show="!collapsed" class="sidebar-body">
+    <div v-show="!isCollapsed" class="sidebar-body">
       <!-- 功能總覽列表 -->
       <div v-show="activeTab === 'system-frames'" class="panel">
         <div v-if="isLoadingSystemFrames" class="loading-state">
@@ -123,22 +123,26 @@
         </div>
       </div>
     </div>
+
+    <div class="sidebar-footer">
+      <button class="pin-btn" :class="{ pinned }" @click="pinned = !pinned" :title="pinned ? '取消固定' : '固定側欄'">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+        </svg>
+      </button>
+    </div>
   </aside>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePageEditorStore } from '@/stores/pageEditor'
 
 const store = usePageEditorStore()
 const activeTab = ref('system-frames')
-const collapsed = ref(false)
-
-watch(() => store.selected, (sel) => {
-  if ((sel.basemap || sel.frame || sel.element || sel.cell) && collapsed.value) {
-    collapsed.value = false
-  }
-}, { deep: true })
+const pinned    = ref(false)
+const hovered   = ref(false)
+const isCollapsed = computed(() => !pinned.value && !hovered.value)
 const isLoadingSystemFrames = ref(false)
 
 const systemFrameList = computed(() => store.availableSystemFrames)
@@ -206,7 +210,6 @@ const onFrameDragStart = (event, frameType) => {
 
 const selectTab = (tab) => {
   activeTab.value = tab
-  if (collapsed.value) collapsed.value = false
 }
 
 const onDragEnd = () => {}
@@ -321,9 +324,21 @@ const onFrameClick = (frameType) => {
   }
 }
 
-.sidebar-toggle-btn {
-  margin-left: auto;
+.sidebar-footer {
   flex-shrink: 0;
+  border-top: 1px solid #f3f4f6;
+  padding: 5px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .is-collapsed & {
+    justify-content: center;
+    padding: 5px 0;
+  }
+}
+
+.pin-btn {
   width: 26px;
   height: 26px;
   border: none;
@@ -335,19 +350,9 @@ const onFrameClick = (frameType) => {
   color: #9ca3af;
   border-radius: 5px;
   transition: background 0.15s, color 0.15s;
-  margin-bottom: 1px;
-  svg { width: 14px; height: 14px; }
+  svg { transition: transform 0.2s; transform: rotate(45deg); }
   &:hover { background: #e5e7eb; color: #374151; }
-
-  .is-collapsed & {
-    margin-left: 0;
-    margin-bottom: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 0;
-    border-bottom: 1px solid #e5e7eb;
-    order: -1;
-  }
+  &.pinned { color: #0891B2; svg { transform: rotate(0deg); } }
 }
 
 // ── Sidebar body ──

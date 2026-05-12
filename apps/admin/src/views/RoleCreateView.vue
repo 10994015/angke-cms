@@ -14,9 +14,8 @@ const form = reactive({ name: '', status: 'OPEN' })
 const allPerms  = ref([])
 const formPerms = ref([])
 
-const error        = ref('')
-const saving       = ref(false)
-const loadingPerms = ref(true)
+const error  = ref('')
+const saving = ref(false)
 
 const MODE_LABELS = { FULL: '完整', READONLY: '唯讀', Full: '完整', Readonly: '唯讀' }
 
@@ -31,14 +30,17 @@ const groupedPerms = computed(() => {
 
 const getFormPerm = (id) => formPerms.value.find(p => p.id === id)
 
+const applyPerms = (cats) => {
+  allPerms.value  = cats
+  formPerms.value = cats.map(p => ({ id: p.id, category: p.category, name: p.name, mode: '' }))
+}
+
 onMounted(async () => {
-  try {
-    const cats = await store.fetchPermissionCategories()
-    allPerms.value  = cats
-    formPerms.value = cats.map(p => ({ id: p.id, category: p.category, name: p.name, mode: '' }))
-  } finally {
-    loadingPerms.value = false
+  if (store.permissionCategories.length > 0) {
+    applyPerms(store.permissionCategories)
+    return
   }
+  applyPerms(await store.fetchPermissionCategories())
 })
 
 const handleSave = async () => {
@@ -97,7 +99,7 @@ const handleSave = async () => {
 
         <div class="form-actions">
           <button class="btn-cancel" @click="router.push('/roles')">取消</button>
-          <button class="btn-save" :disabled="saving || loadingPerms" @click="handleSave">
+          <button class="btn-save" :disabled="saving" @click="handleSave">
             {{ saving ? '新增中...' : '新增角色' }}
           </button>
         </div>
@@ -108,33 +110,26 @@ const handleSave = async () => {
         <div class="form-section">
           <h3 class="section-title">權限設定</h3>
 
-          <div v-if="loadingPerms" class="loading-state">
-            <div class="spinner" />
-            <span>載入權限清單...</span>
-          </div>
-
-          <template v-else>
-            <div class="perm-groups">
-              <div v-for="group in groupedPerms" :key="group.category" class="perm-group">
-                <div class="perm-group-title">{{ group.category }}</div>
-                <div class="perm-items">
-                  <div v-for="item in group.items" :key="item.id" class="perm-item">
-                    <span class="perm-name">{{ item.name }}</span>
-                    <select
-                      v-if="getFormPerm(item.id)"
-                      v-model="getFormPerm(item.id).mode"
-                      class="mode-select"
-                    >
-                      <option value="">無權限</option>
-                      <option v-for="m in (Array.isArray(item.mode) ? item.mode : ['FULL','READONLY'])" :key="m" :value="m">
-                        {{ MODE_LABELS[m] || m }}
-                      </option>
-                    </select>
-                  </div>
+          <div class="perm-groups">
+            <div v-for="group in groupedPerms" :key="group.category" class="perm-group">
+              <div class="perm-group-title">{{ group.category }}</div>
+              <div class="perm-items">
+                <div v-for="item in group.items" :key="item.id" class="perm-item">
+                  <span class="perm-name">{{ item.name }}</span>
+                  <select
+                    v-if="getFormPerm(item.id)"
+                    v-model="getFormPerm(item.id).mode"
+                    class="mode-select"
+                  >
+                    <option value="">無權限</option>
+                    <option v-for="m in (Array.isArray(item.mode) ? item.mode : ['FULL','READONLY'])" :key="m" :value="m">
+                      {{ MODE_LABELS[m] || m }}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
-          </template>
+          </div>
         </div>
       </div>
     </div>
@@ -264,24 +259,6 @@ const handleSave = async () => {
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 40px;
-  color: #9ca3af;
-  font-size: 13px;
-}
-.spinner {
-  width: 22px;
-  height: 22px;
-  border: 2px solid #f3f4f6;
-  border-top-color: #0891B2;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .perm-groups { display: flex; flex-direction: column; gap: 12px; }
 .perm-group { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }

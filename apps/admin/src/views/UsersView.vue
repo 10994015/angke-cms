@@ -71,15 +71,11 @@
             <th>狀態</th>
             <th>建立時間</th>
             <th>最後更新</th>
+            <th style="width:80px">操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="user in users"
-            :key="user.id"
-            class="clickable-row"
-            @click="router.push(`/users/${user.id}`)"
-          >
+          <tr v-for="user in users" :key="user.id">
             <td>
               <div class="user-cell">
                 <div class="user-avatar">{{ avatarChar(user) }}</div>
@@ -97,11 +93,19 @@
             </td>
             <td class="dim">{{ formatDate(user.createdAt) }}</td>
             <td class="dim">{{ formatDate(user.updatedAt) }}</td>
+            <td>
+              <button class="btn-edit" @click="router.push(`/users/${user.id}`)">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
+                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                </svg>
+                編輯
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
 
-      <div v-if="totalPages > 1" class="pagination">
+      <div v-if="!loading" class="pagination">
         <button class="page-btn" :disabled="page <= 1" @click="goPage(page - 1)">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
         </button>
@@ -423,10 +427,24 @@ onMounted(fetchUsers)
   tr:last-child td { border-bottom: none; }
 }
 
-.clickable-row {
+.data-table tbody tr:hover td { background: #fafafa; }
+
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  padding: 5px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
   cursor: pointer;
-  transition: background 0.1s;
-  &:hover td { background: #f0f9ff; }
+  font-family: inherit;
+  transition: all 0.15s;
+  &:hover { border-color: #0891B2; background: #f0f9ff; color: #0891B2; }
 }
 
 .user-cell { display: flex; align-items: center; gap: 10px; }

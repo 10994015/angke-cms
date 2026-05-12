@@ -29,16 +29,20 @@ const getRedirectTarget = () => {
 
 const afterLogin = () => {
   const target = getRedirectTarget()
+  // Always use router.push to avoid a full-page browser reload.
+  // window.location.href resets isInitialized, forcing checkAuth to re-fetch
+  // the user on every guard, which causes the "refresh" on the next page.
   try {
     const url = new URL(target)
-    if (url.origin === window.location.origin) {
-      window.location.href = target
-    } else {
+    // Reject absolute URLs pointing to other origins
+    if (url.origin !== window.location.origin) {
       router.push('/dashboard')
+      return
     }
   } catch {
-    router.push(target)
+    // Relative path — safe to push directly
   }
+  router.push(target)
 }
 
 const triggerGoogleLogin = () => {

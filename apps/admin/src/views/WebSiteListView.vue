@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import axiosClient from '@/axios'
@@ -61,7 +61,8 @@ const handleEditSave = async () => {
   editSaving.value = true
   editError.value  = ''
   try {
-    const res = await axiosClient.patch(`/backend/web-site/${editSiteId.value}`, editForm.value)
+    const { domainName: _dn, ...editPayload } = editForm.value
+    const res = await axiosClient.patch(`/backend/web-site/${editSiteId.value}`, editPayload)
     if (res.data.statusCode === 200) {
       closeEdit()
       await fetchSites()
@@ -94,7 +95,6 @@ const handleEditDelete = async () => {
   }
 }
 
-const goPages = (site) => router.push(`/websites/${site.id}/pages`)
 
 const openCreate = () => {
   createSubdomain.value = ''
@@ -181,6 +181,40 @@ const goPage = (p) => {
 const goEditor = (site) => {
   router.push(`/editor/${site.id}/page-editor`)
 }
+
+const goPages = (site) => router.push(`/websites/${site.id}/pages`)
+
+const zhTwFonts = [
+  { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    cssFamily: "'IBM Plex Sans TC', sans-serif" },
+  { value: 'lxgw-wenkai-mono-tc', label: 'LXGW WenKai Mono TC', cssFamily: "'LXGW WenKai Mono TC', monospace" },
+  { value: 'noto-sans-tc',        label: 'Noto Sans TC',         cssFamily: "'Noto Sans TC', sans-serif" },
+  { value: 'noto-serif-tc',       label: 'Noto Serif TC',        cssFamily: "'Noto Serif TC', serif" },
+]
+
+const zhCnFonts = [
+  { value: 'noto-sans-sc',     label: 'Noto Sans SC',     cssFamily: "'Noto Sans SC', sans-serif" },
+  { value: 'noto-serif-sc',    label: 'Noto Serif SC',    cssFamily: "'Noto Serif SC', serif" },
+  { value: 'ibm-plex-sans-sc', label: 'IBM Plex Sans SC', cssFamily: "'IBM Plex Sans SC', sans-serif" },
+]
+
+const enFonts = [
+  { value: 'bona-nova',          label: 'Bona Nova',          cssFamily: "'Bona Nova', serif" },
+  { value: 'inter',              label: 'Inter',              cssFamily: "'Inter', sans-serif" },
+  { value: 'cormorant-garamond', label: 'Cormorant Garamond', cssFamily: "'Cormorant Garamond', serif" },
+  { value: 'montserrat',         label: 'Montserrat',         cssFamily: "'Montserrat', sans-serif" },
+  { value: 'playfair-display',   label: 'Playfair Display',   cssFamily: "'Playfair Display', serif" },
+]
+
+const fontLabel = (fonts, val) => fonts.find(f => f.value === val)?.label || val || '—'
+const fontCss   = (fonts, val) => fonts.find(f => f.value === val)?.cssFamily || 'inherit'
+
+const pageRange = computed(() => {
+  const t = totalPages.value, c = page.value
+  if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1)
+  if (c <= 4)     return [1, 2, 3, 4, 5, '…', t]
+  if (c >= t - 3) return [1, '…', t - 4, t - 3, t - 2, t - 1, t]
+  return [1, '…', c - 1, c, c + 1, '…', t]
+})
 
 const formatDate = (iso) => {
   if (!iso) return '—'
@@ -312,7 +346,7 @@ onMounted(fetchSites)
               <span v-else class="dim">—</span>
             </td>
             <td>
-              <span class="font-badge">{{ site.frontFamilyZhTw || '—' }}</span>
+              <span class="font-badge" :style="{ fontFamily: fontCss(zhTwFonts, site.frontFamilyZhTw) }">{{ fontLabel(zhTwFonts, site.frontFamilyZhTw) }}</span>
             </td>
             <td class="dim">{{ formatDate(site.createdAt) }}</td>
             <td class="dim">{{ formatDate(site.updatedAt) }}</td>
@@ -343,18 +377,27 @@ onMounted(fetchSites)
       </table>
 
       <!-- 分頁 -->
-      <div v-if="totalPages > 1" class="pagination">
+      <div v-if="!loading" class="pagination">
         <button class="page-btn" :disabled="page <= 1" @click="goPage(page - 1)">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
             <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
         </button>
-        <span class="page-info">第 {{ page }} / {{ totalPages }} 頁</span>
+        <div class="page-numbers">
+          <button
+            v-for="p in pageRange" :key="p"
+            class="page-num"
+            :class="{ active: p === page, ellipsis: p === '…' }"
+            :disabled="p === '…' || p === page"
+            @click="p !== '…' && goPage(p)"
+          >{{ p }}</button>
+        </div>
         <button class="page-btn" :disabled="page >= totalPages" @click="goPage(page + 1)">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
           </svg>
         </button>
+        <span class="page-info">第 {{ page }} / {{ totalPages }} 頁，共 {{ total }} 筆</span>
       </div>
     </div>
     <!-- 建立網站 Modal -->
@@ -407,19 +450,28 @@ onMounted(fetchSites)
             <div v-else class="modal-body">
               <div class="edit-field-group">
                 <label class="field-label">網域名稱</label>
-                <input v-model="editForm.domainName" type="text" class="field-input field-input-full" placeholder="https://example.com" />
+                <span class="domain-readonly">{{ editForm.domainName || '—' }}</span>
               </div>
               <div class="edit-field-group">
                 <label class="field-label">字型 — 繁體中文</label>
-                <input v-model="editForm.frontFamilyZhTw" type="text" class="field-input field-input-full" placeholder="Noto Sans TC" />
+                <select v-model="editForm.frontFamilyZhTw" class="field-select">
+                  <option value="">（不設定）</option>
+                  <option v-for="f in zhTwFonts" :key="f.value" :value="f.value" :style="{ fontFamily: f.cssFamily }">{{ f.label }}</option>
+                </select>
               </div>
               <div class="edit-field-group">
                 <label class="field-label">字型 — 簡體中文</label>
-                <input v-model="editForm.frontFamilyZhCn" type="text" class="field-input field-input-full" placeholder="Noto Sans SC" />
+                <select v-model="editForm.frontFamilyZhCn" class="field-select">
+                  <option value="">（不設定）</option>
+                  <option v-for="f in zhCnFonts" :key="f.value" :value="f.value" :style="{ fontFamily: f.cssFamily }">{{ f.label }}</option>
+                </select>
               </div>
               <div class="edit-field-group">
                 <label class="field-label">字型 — 英文</label>
-                <input v-model="editForm.frontFamilyEnUs" type="text" class="field-input field-input-full" placeholder="Inter" />
+                <select v-model="editForm.frontFamilyEnUs" class="field-select">
+                  <option value="">（不設定）</option>
+                  <option v-for="f in enFonts" :key="f.value" :value="f.value" :style="{ fontFamily: f.cssFamily }">{{ f.label }}</option>
+                </select>
               </div>
               <p v-if="editError" class="create-error">{{ editError }}</p>
             </div>
@@ -662,6 +714,7 @@ onMounted(fetchSites)
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
   padding: 5px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
@@ -693,6 +746,29 @@ onMounted(fetchSites)
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+.domain-readonly {
+  font-size: 13px;
+  color: #6b7280;
+  font-family: 'Courier New', monospace;
+  padding: 9px 0;
+  display: block;
+}
+
+.field-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #111827;
+  outline: none;
+  font-family: inherit;
+  background: #fff;
+  cursor: pointer;
+  &:focus { border-color: #0891B2; box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.1); }
 }
 
 .field-input-full {
@@ -734,9 +810,31 @@ onMounted(fetchSites)
   &:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
+.page-numbers { display: flex; align-items: center; gap: 4px; }
+
+.page-num {
+  min-width: 30px;
+  height: 30px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0 6px;
+  transition: all 0.15s;
+  &:hover:not(:disabled):not(.ellipsis) { border-color: #0891B2; color: #0891B2; }
+  &.active { background: #0891B2; border-color: #0891B2; color: #fff; cursor: default; }
+  &.ellipsis { border-color: transparent; background: transparent; cursor: default; color: #9ca3af; }
+  &:disabled:not(.active):not(.ellipsis) { opacity: 0.5; cursor: not-allowed; }
+}
+
 .page-info {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: 4px;
 }
 
 .btn-create {

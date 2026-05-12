@@ -9,7 +9,7 @@
     <!-- 元件內容 -->
     <template v-else>
       <!-- 刪除按鈕 -->
-      <button v-if="isEditMode" class="delete-btn" @click.stop="$emit('delete', cellIndex)" title="刪除元件">✕</button>
+      <button class="delete-btn" @click.stop="$emit('delete', cellIndex)" title="刪除元件">✕</button>
 
       <!-- TEXT -->
       <div
@@ -30,11 +30,7 @@
           v-if="val.src"
           :src="val.src"
           :alt="val.alt || '圖片'"
-          :style="{
-            width:      ensureUnit(meta.width  || val.width,  '100%'),
-            height:     ensureUnit(val.height, 'auto'),
-            objectFit:  val.objectFit || 'cover',
-          }"
+          :style="{ objectFit: val.objectFit || 'cover' }"
           class="el-image-img"
         />
         <div v-if="!val.src" class="img-no-src">
@@ -241,16 +237,19 @@ const meta    = computed(() => props.element?.metadata || {})
 
 .el-image {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  max-width: 100%;
+  display: block;
   position: relative;
+  line-height: 0;
+  overflow: hidden;
 }
 
 .el-image-img {
-  max-width: 100%;
-  border-radius: 4px;
   display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
 }
 
 .img-no-src {

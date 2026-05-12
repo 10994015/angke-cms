@@ -374,12 +374,11 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 
 <style scoped lang="scss">
 .pv-navbar {
-  background: #fff;
+  background: transparent;
   border-bottom: 1px solid #eee;
   padding: 0 2rem;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  position: relative;
+  z-index: 10;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
@@ -720,4 +719,5 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 
 .overlay-fade-enter-active, .overlay-fade-leave-active { transition: opacity 0.2s; }
 .overlay-fade-enter-from, .overlay-fade-leave-to { opacity: 0; }
+
 </style>

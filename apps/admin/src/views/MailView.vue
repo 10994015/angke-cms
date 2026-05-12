@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import axiosClient from '@/axios'
@@ -58,6 +58,14 @@ const goPage = (p) => {
   if (p < 1 || p > totalPages.value) return
   page.value = p; fetchMails()
 }
+
+const pageRange = computed(() => {
+  const t = totalPages.value, c = page.value
+  if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1)
+  if (c <= 4)     return [1, 2, 3, 4, 5, '…', t]
+  if (c >= t - 3) return [1, '…', t - 4, t - 3, t - 2, t - 1, t]
+  return [1, '…', c - 1, c, c + 1, '…', t]
+})
 
 const formatDate = (iso) => {
   if (!iso) return '—'
@@ -135,6 +143,7 @@ onMounted(fetchMails)
           <tr>
             <th>名稱</th>
             <th>Email</th>
+            <th>寄件地址</th>
             <th>SMTP 伺服器</th>
             <th>連接埠</th>
             <th>建立日期</th>
@@ -156,6 +165,7 @@ onMounted(fetchMails)
               </div>
             </td>
             <td class="mono">{{ mail.email }}</td>
+            <td class="mono">{{ mail.smtpFrom || '—' }}</td>
             <td class="mono">{{ mail.smtpServer }}</td>
             <td><span class="port-badge">{{ mail.smtpPort }}</span></td>
             <td class="dim">{{ formatDate(mail.createdAt) }}</td>
@@ -172,18 +182,27 @@ onMounted(fetchMails)
         </tbody>
       </table>
 
-      <div v-if="totalPages > 1" class="pagination">
+      <div v-if="!loading" class="pagination">
         <button class="page-btn" :disabled="page <= 1" @click="goPage(page - 1)">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
             <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
           </svg>
         </button>
-        <span class="page-info">第 {{ page }} / {{ totalPages }} 頁</span>
+        <div class="page-numbers">
+          <button
+            v-for="p in pageRange" :key="p"
+            class="page-num"
+            :class="{ active: p === page, ellipsis: p === '…' }"
+            :disabled="p === '…' || p === page"
+            @click="p !== '…' && goPage(p)"
+          >{{ p }}</button>
+        </div>
         <button class="page-btn" :disabled="page >= totalPages" @click="goPage(page + 1)">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
           </svg>
         </button>
+        <span class="page-info">第 {{ page }} / {{ totalPages }} 頁，共 {{ total }} 筆</span>
       </div>
     </div>
   </AdminLayout>
@@ -402,6 +421,7 @@ onMounted(fetchMails)
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
   padding: 5px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
@@ -435,9 +455,31 @@ onMounted(fetchMails)
   justify-content: center;
   cursor: pointer;
   color: #374151;
+  transition: all 0.15s;
   &:hover:not(:disabled) { border-color: #0891B2; color: #0891B2; }
   &:disabled { opacity: 0.35; cursor: not-allowed; }
 }
 
-.page-info { font-size: 13px; color: #6b7280; }
+.page-numbers { display: flex; align-items: center; gap: 4px; }
+
+.page-num {
+  min-width: 30px;
+  height: 30px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0 6px;
+  transition: all 0.15s;
+  &:hover:not(:disabled):not(.ellipsis) { border-color: #0891B2; color: #0891B2; }
+  &.active { background: #0891B2; border-color: #0891B2; color: #fff; cursor: default; }
+  &.ellipsis { border-color: transparent; background: transparent; cursor: default; color: #9ca3af; }
+  &:disabled:not(.active):not(.ellipsis) { opacity: 0.5; cursor: not-allowed; }
+}
+
+.page-info { font-size: 12px; color: #9ca3af; margin-left: 4px; }
 </style>

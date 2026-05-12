@@ -81,7 +81,7 @@
               :key="`cr-${idx}`"
               class="grid-cell composite-cell"
               :class="cellClass(displayElements[idx], idx)"
-              :style="cellStyle(displayElements[idx])"
+              :style="compositeCellStyle(displayElements[idx])"
               @click.stop="handleCellClick(idx, displayElements[idx])"
               @dragover="handleDragOver($event, idx)"
               @dragleave="dragOverCell = null"
@@ -229,6 +229,16 @@ const cellStyle = (element) => {
   return styles
 }
 
+// Composite cells live in flex-direction:column containers — flex: 1 there means vertical
+// growth, which balloons the cell far beyond its content. Only apply padding for these.
+const compositeCellStyle = (element) => {
+  if (element?.padding) {
+    const p = element.padding[DEVICE_KEY.value] || element.padding.pc || {}
+    return { padding: `${p.top ?? 20}px ${p.right ?? 20}px ${p.bottom ?? 20}px ${p.left ?? 20}px` }
+  }
+  return { padding: '20px' }
+}
+
 const gridStyle = computed(() => {
   const layout = frameLayout.value
   if (isMobile.value && (isMultiColumnLayout.value || isSingleRowMultiCol.value)) {
@@ -238,7 +248,11 @@ const gridStyle = computed(() => {
     return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0' }
   }
   if (isSingleRowMultiCol.value) {
-    const widths = displayElements.value.map(el => el?.width || '1fr')
+    const widths = displayElements.value.map(el => {
+      const w = el?.width
+      if (!w || w === '100%' || w === 'auto') return '1fr'
+      return w
+    })
     return { display: 'grid', gridTemplateColumns: widths.join(' '), gap: '0' }
   }
   const dblGrids = {
@@ -249,7 +263,7 @@ const gridStyle = computed(() => {
   if (dblGrids[layout]) {
     return { display: 'grid', gridTemplateColumns: dblGrids[layout], gap: '0' }
   }
-  return { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0' }
+  return { display: 'grid', gridTemplateColumns: '1fr', gap: '0' }
 })
 
 const isElementSelected = (index) => store.selected.element && store.selected.element === displayElements.value[index]
@@ -367,6 +381,7 @@ const handleDeleteFrame = () => {
 
 .composite-cell { width: 100%; box-sizing: border-box; }
 
+
 .grid-cell {
   position: relative;
   border: 2px solid transparent;
@@ -374,6 +389,7 @@ const handleDeleteFrame = () => {
   transition: all 0.15s;
   box-sizing: border-box;
   min-height: 60px;
+  min-width: 0;
 
   &.has-element {
     cursor: pointer;

@@ -16,16 +16,17 @@ export const setUnauthorizedHandler = (handler) => {
   onUnauthorized = handler
 }
 
+export const resetHandling401 = () => {
+  isHandling401 = false
+}
+
 axiosClient.interceptors.request.use(
   (config) => config,
   (error) => Promise.reject(error),
 )
 
 axiosClient.interceptors.response.use(
-  (response) => {
-    isHandling401 = false
-    return response
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       if (isHandling401) return Promise.reject(error)

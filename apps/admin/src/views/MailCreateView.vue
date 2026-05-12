@@ -6,7 +6,7 @@ import axiosClient from '@/axios'
 
 const router = useRouter()
 
-const form    = ref({ name: '', email: '', smtpServer: 'smtp.gmail.com', smtpPort: '465', password: '' })
+const form    = ref({ name: '', email: '', smtpFrom: '', smtpServer: 'smtp.gmail.com', smtpPort: '465', password: '' })
 const error   = ref('')
 const saving  = ref(false)
 const showPwd = ref(false)
@@ -23,6 +23,7 @@ const handleSave = async () => {
     const res = await axiosClient.post('/backend/mail/', {
       name:       name.trim(),
       email:      email.trim(),
+      smtpFrom:   form.value.smtpFrom.trim() || undefined,
       smtpServer: smtpServer.trim(),
       smtpPort:   smtpPort.trim(),
       password:   form.value.password || undefined,
@@ -63,6 +64,11 @@ const handleSave = async () => {
         <div class="field-group">
           <label class="field-label">Email <span class="required">*</span></label>
           <input v-model="form.email" type="email" class="field-input" placeholder="example@gmail.com" />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">寄件地址</label>
+          <input v-model="form.smtpFrom" type="email" class="field-input" placeholder="留空則使用 Email" />
         </div>
       </div>
 

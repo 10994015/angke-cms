@@ -81,6 +81,10 @@ onMounted(() => {
             <span class="info-label">Email</span>
             <span class="info-value mono">{{ mail.email || '—' }}</span>
           </div>
+          <div class="info-row">
+            <span class="info-label">寄件地址</span>
+            <span class="info-value mono">{{ mail.smtpFrom || '—' }}</span>
+          </div>
         </div>
       </div>
 

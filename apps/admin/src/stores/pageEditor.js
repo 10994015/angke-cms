@@ -461,8 +461,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         const raw = res.data.data
         const uploadedFile = Array.isArray(raw) ? raw[0] : raw
         if (!uploadedFile) return null
-        const rawUrl = uploadedFile.publicFileUrl || uploadedFile.fileUrl
-        const fileUrl = rawUrl?.startsWith('http') ? new URL(rawUrl).pathname : rawUrl
+        const fileUrl = uploadedFile.fileDir || uploadedFile.publicFileUrl || uploadedFile.fileUrl
         return {
           id:           uploadedFile.id,
           fileUrl,

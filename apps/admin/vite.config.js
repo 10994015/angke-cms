@@ -16,10 +16,8 @@ export default defineConfig({
       '/api': {
         target: 'https://angke.com.tw',
         changeOrigin: true,
-      },
-      '/public/temp': {
-        target: 'https://angke.com.tw',
-        changeOrigin: true,
+        cookieDomainRewrite: '',
+        cookiePathRewrite: '/',
       },
     },
   },

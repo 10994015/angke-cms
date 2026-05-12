@@ -27,7 +27,6 @@
       <span v-else class="toggle-placeholder" />
 
       <span class="tree-name">{{ node.tab || node.slug }}</span>
-      <span class="tree-slug">/{{ node.slug }}</span>
       <span class="tree-layer">{{ node.layer }}</span>
 
       <div class="tree-actions" @dragstart.stop>
@@ -198,16 +197,6 @@ const onDrop = (e) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.tree-slug {
-  font-size: 11px;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 2px 7px;
-  border-radius: 4px;
-  white-space: nowrap;
-  font-family: 'Courier New', monospace;
 }
 
 .tree-layer {

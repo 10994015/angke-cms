@@ -2,41 +2,41 @@
   <footer class="pv-footer" :class="`device-${store.currentDevice}`" :style="footerStyle">
     <div class="pv-footer-container">
 
-      <div class="pv-footer-content">
-
-        <!-- 左側 Logo -->
+      <!-- 上方：Logo + 聯絡電話 -->
+      <div class="pv-footer-top">
         <div class="pv-footer-brand">
-          <div class="pv-footer-logo">
-            <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="pv-logo-img" />
-            <span v-else class="pv-logo-icon">
-              <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
-                <rect width="28" height="28" rx="6" fill="#0891B2"/>
-                <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
-              </svg>
-            </span>
-            <span v-if="displayName" class="pv-logo-name">{{ displayName }}</span>
-          </div>
+          <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="pv-logo-img" />
+          <span v-else class="pv-logo-icon">
+            <svg width="34" height="34" viewBox="0 0 28 28" fill="none">
+              <rect width="28" height="28" rx="6" fill="#0891B2"/>
+              <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
+            </svg>
+          </span>
+          <span v-if="displayName" class="pv-logo-name">{{ displayName }}</span>
         </div>
-
-        <!-- 中間連結欄 -->
-        <div class="pv-footer-links-wrapper">
-          <div v-for="(column, colIndex) in columns" :key="colIndex" class="pv-footer-column">
-            <a v-for="item in column" :key="item" href="#" class="pv-footer-link">{{ item }}</a>
-          </div>
+        <div v-if="displayPhone" class="pv-footer-phone">
+          <span class="pv-phone-label">聯絡電話</span>
+          <span class="pv-phone-num">{{ displayPhone }}</span>
         </div>
-
-        <!-- 右側聯絡資訊 -->
-        <div class="pv-footer-contact-col">
-          <h4 class="pv-contact-heading">聯絡我們</h4>
-          <p v-if="displayPhone"   class="pv-contact-item">電話：{{ displayPhone }}</p>
-          <p v-if="displayAddress" class="pv-contact-item">地址：{{ displayAddress }}</p>
-          <p v-if="displayEmail"   class="pv-contact-item">Email：{{ displayEmail }}</p>
-        </div>
-
       </div>
 
       <div class="pv-footer-divider" />
 
+      <!-- 中間：連結欄 + 聯絡資訊欄 -->
+      <div class="pv-footer-links-area">
+        <div v-for="(column, colIndex) in columns" :key="colIndex" class="pv-footer-col">
+          <a v-for="item in column" :key="item" href="#" class="pv-footer-link">{{ item }}</a>
+        </div>
+
+        <div v-if="displayAddress || displayEmail" class="pv-footer-col pv-footer-col--contact">
+          <span v-if="displayAddress" class="pv-footer-link pv-footer-info">{{ displayAddress }}</span>
+          <span v-if="displayEmail"   class="pv-footer-link pv-footer-info">{{ displayEmail }}</span>
+        </div>
+      </div>
+
+      <div class="pv-footer-divider" />
+
+      <!-- 下方：版權 -->
       <div class="pv-footer-bottom">
         <p>{{ displayCopyright }}</p>
       </div>
@@ -83,9 +83,8 @@ const footerStyle = computed(() => {
 
 <style scoped lang="scss">
 .pv-footer {
-  background: #1e1e1e;
-  color: var(--pv-footer-text, #fff);
-  padding: 3rem 0 0;
+  background: #06082d;
+  color: var(--pv-footer-text, rgba(255, 255, 255, 0.82));
   word-break: keep-all;
   overflow-wrap: break-word;
 }
@@ -93,27 +92,25 @@ const footerStyle = computed(() => {
 .pv-footer-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 3rem;
+  padding: 2.5rem 3rem;
 }
 
-.pv-footer-content {
-  display: grid;
-  grid-template-columns: 2fr 3fr 2fr;
-  gap: 4rem;
-  padding-bottom: 2.5rem;
-  align-items: start;
-}
-
-.pv-footer-brand { display: flex; flex-direction: column; }
-
-.pv-footer-logo {
+// ── 上方列：Logo + 電話 ──
+.pv-footer-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  padding-bottom: 2rem;
+}
+
+.pv-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .pv-logo-img {
-  max-width: 120px;
+  max-width: 130px;
   max-height: 40px;
   object-fit: contain;
 }
@@ -121,95 +118,104 @@ const footerStyle = computed(() => {
 .pv-logo-icon { display: flex; align-items: center; flex-shrink: 0; }
 
 .pv-logo-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--pv-footer-text, #fff);
+}
+
+.pv-footer-phone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pv-phone-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0891B2;
+  white-space: nowrap;
+}
+
+.pv-phone-num {
+  font-size: 15px;
+  font-weight: 600;
   color: var(--pv-footer-text, #fff);
   white-space: nowrap;
-  letter-spacing: 1px;
 }
 
-.pv-footer-links-wrapper {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem 2rem;
+// ── 分隔線 ──
+.pv-footer-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.pv-footer-column {
+// ── 連結區 ──
+.pv-footer-links-area {
+  display: flex;
+  gap: 3rem;
+  padding: 2rem 0;
+}
+
+.pv-footer-col {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 10px;
+  flex: 1;
+}
+
+.pv-footer-col--contact {
+  flex: 1.4;
 }
 
 .pv-footer-link {
   font-size: 14px;
-  color: var(--pv-footer-text, rgba(255, 255, 255, 0.7));
-  opacity: 0.75;
+  color: var(--pv-footer-text, rgba(255, 255, 255, 0.65));
   text-decoration: none;
-  transition: opacity 0.2s;
+  line-height: 1.5;
+  transition: color 0.18s;
   white-space: nowrap;
-  &:hover { opacity: 1; }
+
+  &:hover { color: var(--pv-footer-text, #fff); }
 }
 
-.pv-footer-contact-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
+.pv-footer-info {
+  cursor: default;
+  white-space: normal;
+  &:hover { color: var(--pv-footer-text, rgba(255, 255, 255, 0.65)); }
 }
 
-.pv-contact-heading {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--pv-footer-text, #fff);
-  margin: 0 0 0.25rem;
-}
-
-.pv-contact-item {
-  font-size: 14px;
-  color: var(--pv-footer-text, rgba(255, 255, 255, 0.7));
-  opacity: 0.75;
-  margin: 0;
-  line-height: 1.7;
-}
-
-.pv-footer-divider {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
+// ── 底部版權 ──
 .pv-footer-bottom {
-  padding: 1.5rem 0;
-  text-align: center;
+  padding: 1.5rem 0 0;
+
   p {
     margin: 0;
     font-size: 13px;
-    color: var(--pv-footer-text, rgba(255, 255, 255, 0.45));
-    opacity: 0.6;
+    color: var(--pv-footer-text, rgba(255, 255, 255, 0.38));
   }
 }
 
-// 平板
+// ── 平板 ──
 .pv-footer.device-tablet {
-  padding: 2rem 0 0;
-  .pv-footer-container { padding: 0 1.5rem; }
-  .pv-footer-content { grid-template-columns: 1fr 2fr 1.5fr; gap: 2rem; }
-  .pv-logo-name    { font-size: 17px; }
-  .pv-footer-link  { font-size: 13px; }
-  .pv-contact-item { font-size: 13px; }
+  .pv-footer-container { padding: 2rem 1.5rem; }
+  .pv-footer-links-area { gap: 2rem; }
+  .pv-logo-name { font-size: 15px; }
+  .pv-footer-link { font-size: 13px; }
 }
 
-// 手機
+// ── 手機 ──
 .pv-footer.device-mobile {
-  padding: 1.5rem 0 0;
-  .pv-footer-container { padding: 0 1.25rem; }
-  .pv-footer-content {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
-    padding-bottom: 1.5rem;
+  .pv-footer-container { padding: 1.75rem 1.25rem; }
+  .pv-footer-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .pv-footer-links-area {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    .pv-footer-col { flex: 0 0 calc(50% - 0.75rem); }
   }
-  .pv-footer-links-wrapper { grid-template-columns: repeat(2, 1fr); gap: 0.75rem 1.5rem; }
-  .pv-logo-name    { font-size: 17px; }
-  .pv-footer-link  { font-size: 13px; }
-  .pv-contact-item { font-size: 13px; }
-  .pv-footer-bottom { padding: 1rem 0; p { font-size: 12px; } }
+  .pv-logo-name { font-size: 15px; }
+  .pv-footer-link { font-size: 13px; }
+  .pv-footer-bottom { p { font-size: 12px; } }
 }
 </style>

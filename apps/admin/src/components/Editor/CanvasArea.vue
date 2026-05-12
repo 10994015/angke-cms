@@ -33,11 +33,22 @@
         <template v-for="(basemap, bIdx) in store.currentPageBasemaps" :key="bIdx">
 
           <!-- HEADER basemap -->
-          <NavbarBasemap
+          <BasemapWrapper
             v-if="isHeaderBasemap(basemap)"
-            :frame-data="basemap.frames?.[0]?.data || {}"
-            :frame="basemap.frames?.[0] || null"
-          />
+            :index="bIdx"
+            :basemap="basemap"
+            :total-basemaps="store.currentPageBasemaps.length"
+            :is-deletable="false"
+            :disable-move="true"
+            @add-basemap="onAddBasemap"
+            @delete-basemap="onDeleteBasemap"
+            @move-basemap="onMoveBasemap"
+          >
+            <NavbarBasemap
+              :frame-data="basemap.frames?.[0]?.data || {}"
+              :frame="basemap.frames?.[0] || null"
+            />
+          </BasemapWrapper>
 
           <!-- FOOTER basemap -->
           <FooterBasemap
@@ -244,6 +255,7 @@ const addFirstSection = () => {
   background: #e5e7eb;
   position: relative;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
   padding: 32px 24px;
 }
@@ -255,9 +267,8 @@ const addFirstSection = () => {
   background: #fff;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  min-height: 100%;
+  min-height: calc(100% - 64px);
   height: fit-content;
-  overflow: hidden;
 
   &.device-tablet { max-width: 768px; }
   &.device-mobile { max-width: 390px; }

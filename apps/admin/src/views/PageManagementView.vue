@@ -81,29 +81,35 @@ const infoSaving   = ref(false)
 const infoError    = ref('')
 const infoForm     = ref({ locale: 'ZH-TW', tab: '', seoTitle: '', seoDescription: '', seoKeywords: '' })
 
-const openInfo = async (node) => {
-  infoNode.value    = node
-  infoError.value   = ''
-  infoForm.value    = { locale: 'ZH-TW', tab: node.tab || '', seoTitle: node.seoTitle || '', seoDescription: '', seoKeywords: '' }
-  infoVisible.value = true
+const fetchInfoLocale = async (locale) => {
+  if (!infoNode.value) return
   infoLoading.value = true
+  infoError.value   = ''
   try {
-    const res = await axiosClient.get(`/backend/web-site/${siteId}/page/${node.slug}`, {
-      params: { locale: 'ZH-TW' }
+    const res = await axiosClient.get(`/backend/web-site/${siteId}/page/${infoNode.value.slug}`, {
+      params: { locale }
     })
     if (res.data.statusCode === 200 && res.data.data) {
       const d = res.data.data
       infoForm.value = {
-        locale:         d.locale         || 'ZH-TW',
-        tab:            d.tab            || node.tab || '',
+        locale,
+        tab:            d.tab            || '',
         seoTitle:       d.seoTitle       || '',
         seoDescription: d.seoDescription || '',
         seoKeywords:    d.seoKeywords    || '',
       }
     }
-  } catch { /* 用 tree 資料作為初始值即可 */ } finally {
+  } catch { /* 維持當前表單資料 */ } finally {
     infoLoading.value = false
   }
+}
+
+const openInfo = async (node) => {
+  infoNode.value    = node
+  infoError.value   = ''
+  infoForm.value    = { locale: 'ZH-TW', tab: node.tab || '', seoTitle: '', seoDescription: '', seoKeywords: '' }
+  infoVisible.value = true
+  await fetchInfoLocale('ZH-TW')
 }
 
 const closeInfo = () => { infoVisible.value = false; infoNode.value = null }
@@ -247,10 +253,10 @@ const handleCreate = async () => {
       slug:           slug.trim(),
       tab:            tab.trim(),
       locale:         f.locale || 'ZH-TW',
-      seoTitle:       f.seoTitle.trim()       || tab.trim(),
-      seoDescription: f.seoDescription.trim() || undefined,
-      seoKeywords:    f.seoKeywords.trim()    || undefined,
-      parentId:       f.parentId              || undefined,
+      seoTitle:       f.seoTitle.trim()       || null,
+      seoDescription: f.seoDescription.trim() || null,
+      seoKeywords:    f.seoKeywords.trim()    || null,
+      parentId:       f.parentId              || null,
     }
     const res = await axiosClient.post(`/backend/web-site/${siteId}/page`, body)
     if (res.data.statusCode === 200 || res.data.statusCode === 201) {
@@ -304,7 +310,6 @@ onMounted(fetchPages)
       <!-- Header row -->
       <div class="tree-header-row">
         <div class="col-name">頁面名稱</div>
-        <div class="col-slug">路徑</div>
         <div class="col-layer">層級</div>
         <div class="col-actions">操作</div>
       </div>
@@ -459,7 +464,7 @@ onMounted(fetchPages)
               <!-- 語言 -->
               <div class="field-group">
                 <label class="field-label">語言</label>
-                <select v-model="infoForm.locale" class="field-select">
+                <select v-model="infoForm.locale" class="field-select" @change="fetchInfoLocale(infoForm.locale)">
                   <option value="ZH-TW">繁體中文 (ZH-TW)</option>
                   <option value="ZH-CN">簡體中文 (ZH-CN)</option>
                   <option value="EN-US">英文 (EN-US)</option>
@@ -638,7 +643,6 @@ onMounted(fetchPages)
   letter-spacing: 0.05em;
 
   .col-name    { flex: 1; }
-  .col-slug    { width: 130px; }
   .col-layer   { width: 50px; }
   .col-actions { width: 220px; text-align: right; }
 }

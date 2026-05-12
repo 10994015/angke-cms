@@ -132,10 +132,6 @@
             </label>
           </div>
           <div class="prop-group">
-            <label class="prop-label">圖片網址</label>
-            <input type="text" class="prop-input" :value="v('src') || ''" @input="up('src', $event.target.value)" placeholder="https://..." />
-          </div>
-          <div class="prop-group">
             <label class="prop-label">替代文字</label>
             <input type="text" class="prop-input" :value="v('alt') || ''" @input="up('alt', $event.target.value)" placeholder="圖片描述" />
           </div>
