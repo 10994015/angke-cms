@@ -1,5 +1,5 @@
 <template>
-  <div :class="['ndm', depth === 0 ? 'ndm--root' : 'ndm--sub']">
+  <div :class="['ndm', isPortal ? 'ndm--portal' : (depth === 0 ? 'ndm--root' : 'ndm--sub')]">
     <div
       v-for="item in items"
       :key="item.slug"
@@ -33,8 +33,9 @@ defineOptions({ name: 'NavDropdownMenu' })
 import { ref, inject } from 'vue'
 
 defineProps({
-  items: { type: Array, default: () => [] },
-  depth: { type: Number, default: 0 },
+  items:    { type: Array,   default: () => [] },
+  depth:    { type: Number,  default: 0 },
+  isPortal: { type: Boolean, default: false },
 })
 
 const nav = inject('navDropdownState')
@@ -56,7 +57,7 @@ const onLeave = () => { hoveredSlug.value = null }
 
   &--root {
     position: absolute;
-    top: calc(100% + 4px);
+    top: calc(100% - 4px);
     left: 50%;
     transform: translateX(-50%);
     min-width: 164px;
@@ -77,6 +78,15 @@ const onLeave = () => { hoveredSlug.value = null }
     border-radius: 10px;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
     z-index: 600;
+  }
+
+  &--portal {
+    transform: translateX(-50%);
+    min-width: 164px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
 }
 

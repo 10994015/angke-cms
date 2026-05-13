@@ -179,13 +179,17 @@ const doubleRowSplit = computed(() => {
 })
 
 const compositeInfo = computed(() => {
-  const map = {
-    'A': { leftCells: [0],       rightCells: [1, 2],    leftWidth: '66.7%', reverse: false },
-    'B': { leftCells: [0, 1],    rightCells: [2],       leftWidth: '33.3%', reverse: false },
-    'C': { leftCells: [0],       rightCells: [1, 2, 3], leftWidth: '66.7%', reverse: false },
-    'D': { leftCells: [0, 1, 2], rightCells: [3],       leftWidth: '25%',   reverse: false },
+  const defaults = {
+    'A': { leftCells: [0],       rightCells: [1, 2],    defaultLeft: 67, reverse: false },
+    'B': { leftCells: [0, 1],    rightCells: [2],       defaultLeft: 33, reverse: false },
+    'C': { leftCells: [0],       rightCells: [1, 2, 3], defaultLeft: 67, reverse: false },
+    'D': { leftCells: [0, 1, 2], rightCells: [3],       defaultLeft: 25, reverse: false },
   }
-  return map[frameLayout.value] || null
+  const info = defaults[frameLayout.value]
+  if (!info) return null
+  const stored = props.frame.data?.columnWidths
+  const leftPct = (Array.isArray(stored) && stored.length === 2) ? stored[0] : info.defaultLeft
+  return { ...info, leftWidth: `${leftPct}%` }
 })
 
 // 手機版重新排列（按欄）
@@ -248,12 +252,11 @@ const gridStyle = computed(() => {
     return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0' }
   }
   if (isSingleRowMultiCol.value) {
-    const widths = displayElements.value.map(el => {
-      const w = el?.width
-      if (!w || w === '100%' || w === 'auto') return '1fr'
-      return w
-    })
-    return { display: 'grid', gridTemplateColumns: widths.join(' '), gap: '0' }
+    const colWidths = props.frame.data?.columnWidths
+    if (Array.isArray(colWidths) && colWidths.length === cellCount.value) {
+      return { display: 'grid', gridTemplateColumns: colWidths.map(w => `${w}%`).join(' '), gap: '0' }
+    }
+    return { display: 'grid', gridTemplateColumns: `repeat(${cellCount.value}, 1fr)`, gap: '0' }
   }
   const dblGrids = {
     '2_2': 'repeat(2, 1fr)',
@@ -386,6 +389,7 @@ const handleDeleteFrame = () => {
   position: relative;
   border: 2px solid transparent;
   border-radius: 6px;
+  overflow: hidden;
   transition: all 0.15s;
   box-sizing: border-box;
   min-height: 60px;

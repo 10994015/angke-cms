@@ -21,15 +21,15 @@
     <!-- 版面配置設定 -->
     <template v-else-if="selectedFrame && !el">
       <div class="panel-header">
-        <span class="panel-title">{{ isNavbarFrame ? '導覽列設定' : '版面配置設定' }}</span>
+        <span class="panel-title">{{ isNavbarFrame ? '導覽列設定' : isFooterFrame ? '頁尾設定' : '版面配置設定' }}</span>
         <button class="close-btn" @click="store.clearSelection()">✕</button>
       </div>
       <div class="panel-body">
 
-        <!-- Navbar Logo 上傳 -->
-        <template v-if="isNavbarFrame">
+        <!-- Navbar / Footer Logo 上傳 -->
+        <template v-if="isNavbarFrame || isFooterFrame">
           <div class="prop-group">
-            <label class="prop-label">導覽列 Logo</label>
+            <label class="prop-label">Logo</label>
             <div v-if="frameData.logoImgSrc" class="logo-preview-wrap">
               <img :src="frameData.logoImgSrc" class="logo-preview" alt="Logo" />
               <button class="logo-remove-btn" @click="setFrameData('logoImgSrc', null); setFrameData('logoImgId', null)">✕</button>
@@ -54,16 +54,29 @@
           <label class="prop-label">版面配置內距 (px)</label>
           <div class="padding-grid">
             <div />
-            <input type="number" class="pad-input" :value="frameData.padding?.pc?.top ?? 0" @input="setFramePad('top', +$event.target.value)" title="上" />
+            <div class="pad-field">
+              <span class="pad-dir">上</span>
+              <input type="number" class="pad-input" :value="frameData.padding?.pc?.top ?? 0" @input="setFramePad('top', +$event.target.value)" />
+            </div>
             <div />
-            <input type="number" class="pad-input" :value="frameData.padding?.pc?.left ?? 0" @input="setFramePad('left', +$event.target.value)" title="左" />
-            <div class="pad-center">內距</div>
-            <input type="number" class="pad-input" :value="frameData.padding?.pc?.right ?? 0" @input="setFramePad('right', +$event.target.value)" title="右" />
+            <div class="pad-field">
+              <span class="pad-dir">左</span>
+              <input type="number" class="pad-input" :value="frameData.padding?.pc?.left ?? 0" @input="setFramePad('left', +$event.target.value)" />
+            </div>
+            <div class="pad-center"><div class="pad-center-box"></div></div>
+            <div class="pad-field">
+              <span class="pad-dir">右</span>
+              <input type="number" class="pad-input" :value="frameData.padding?.pc?.right ?? 0" @input="setFramePad('right', +$event.target.value)" />
+            </div>
             <div />
-            <input type="number" class="pad-input" :value="frameData.padding?.pc?.bottom ?? 0" @input="setFramePad('bottom', +$event.target.value)" title="下" />
+            <div class="pad-field">
+              <span class="pad-dir">下</span>
+              <input type="number" class="pad-input" :value="frameData.padding?.pc?.bottom ?? 0" @input="setFramePad('bottom', +$event.target.value)" />
+            </div>
             <div />
           </div>
         </div>
+
       </div>
     </template>
 
@@ -76,26 +89,66 @@
       <div class="panel-body">
 
         <!-- 元件內距 -->
-        <details class="prop-section">
-          <summary class="prop-section-title">內距設定 (px)</summary>
-          <div class="padding-grid" style="margin-top:8px">
+        <div class="prop-section">
+          <div class="prop-section-title">
+            <span>內距設定</span>
+            <span class="pad-device-badge">{{ { desktop: '桌面', tablet: '平板', mobile: '手機' }[store.currentDevice] || '桌面' }}</span>
+          </div>
+          <div class="padding-grid">
             <div />
-            <input type="number" class="pad-input" :value="elPad('top')" @input="setElPad('top', +$event.target.value)" title="上" />
+            <div class="pad-field">
+              <span class="pad-dir">上</span>
+              <input type="number" class="pad-input" :value="elPad('top')" @input="setElPad('top', +$event.target.value)" />
+            </div>
             <div />
-            <input type="number" class="pad-input" :value="elPad('left')" @input="setElPad('left', +$event.target.value)" title="左" />
-            <div class="pad-center">內距</div>
-            <input type="number" class="pad-input" :value="elPad('right')" @input="setElPad('right', +$event.target.value)" title="右" />
+            <div class="pad-field">
+              <span class="pad-dir">左</span>
+              <input type="number" class="pad-input" :value="elPad('left')" @input="setElPad('left', +$event.target.value)" />
+            </div>
+            <div class="pad-center"><div class="pad-center-box"></div></div>
+            <div class="pad-field">
+              <span class="pad-dir">右</span>
+              <input type="number" class="pad-input" :value="elPad('right')" @input="setElPad('right', +$event.target.value)" />
+            </div>
             <div />
-            <input type="number" class="pad-input" :value="elPad('bottom')" @input="setElPad('bottom', +$event.target.value)" title="下" />
+            <div class="pad-field">
+              <span class="pad-dir">下</span>
+              <input type="number" class="pad-input" :value="elPad('bottom')" @input="setElPad('bottom', +$event.target.value)" />
+            </div>
             <div />
           </div>
-        </details>
+        </div>
+
+        <!-- 欄位寬度（多欄版面） -->
+        <template v-if="isElementInMultiColFrame">
+          <div class="prop-group">
+            <div class="col-width-header">
+              <label class="prop-label">欄位寬度</label>
+              <button class="col-reset-btn" @click="resetElementColWidths">重置</button>
+            </div>
+            <div class="col-width-preview">
+              <div v-for="(w, i) in elementColWidths" :key="i" class="col-preview-seg" :style="{ flex: w }">{{ w }}%</div>
+            </div>
+            <div class="col-width-rows">
+              <div v-for="(w, i) in elementColWidths" :key="i" class="col-width-row">
+                <span class="col-width-label">{{ elementColLabels[i] }}</span>
+                <input type="range" class="col-width-slider"
+                  :min="10" :max="100 - (elementColCount - 1) * 10"
+                  :value="w" @input="updateElementColWidth(i, +$event.target.value)" />
+                <input type="number" class="col-width-num"
+                  :min="10" :max="100 - (elementColCount - 1) * 10"
+                  :value="w" @change="updateElementColWidth(i, +$event.target.value)" />
+                <span class="col-unit">%</span>
+              </div>
+            </div>
+          </div>
+        </template>
 
         <!-- TEXT -->
         <template v-if="el.type === 'TEXT'">
           <div class="prop-group">
             <label class="prop-label">文字內容</label>
-            <textarea class="prop-textarea" :value="v('text')" @input="up('text', $event.target.value)" rows="7" />
+            <RichEditor :model-value="v('text') || ''" @update:model-value="up('text', $event)" />
           </div>
           <div class="prop-group">
             <label class="prop-label">字體大小</label>
@@ -130,6 +183,38 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               {{ uploading ? '上傳中...' : '選擇圖片' }}
             </label>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">超連結</label>
+            <div class="btn-group" style="margin-bottom:5px">
+              <button class="toggle-btn" :class="{ active: !v('linkType') || v('linkType') === 'url' }" @click="up('linkType', 'url')">外部網址</button>
+              <button class="toggle-btn" :class="{ active: v('linkType') === 'page' }" @click="up('linkType', 'page')">站內頁面</button>
+            </div>
+            <input
+              v-if="!v('linkType') || v('linkType') === 'url'"
+              type="text" class="prop-input"
+              :value="v('link') || ''"
+              @input="up('link', $event.target.value)"
+              placeholder="https://..."
+            />
+            <select
+              v-else
+              class="prop-select"
+              :value="v('linkPage') || ''"
+              @change="onImgSelectPage($event.target.value)"
+            >
+              <option value="">-- 請選擇頁面 --</option>
+              <option v-for="page in navPages" :key="page.slug" :value="page.slug">
+                {{ '　'.repeat(page.depth) }}{{ page.label }}
+              </option>
+            </select>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">開啟方式</label>
+            <div class="btn-group">
+              <button class="toggle-btn" :class="{ active: !v('linkTarget') || v('linkTarget') === '_self' }" @click="up('linkTarget', '_self')">同頁</button>
+              <button class="toggle-btn" :class="{ active: v('linkTarget') === '_blank' }" @click="up('linkTarget', '_blank')">新分頁</button>
+            </div>
           </div>
           <div class="prop-group">
             <label class="prop-label">替代文字</label>
@@ -398,7 +483,8 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { usePageEditorStore } from '@/stores/pageEditor'
+import { usePageEditorStore, parseFrameLayout } from '@/stores/pageEditor'
+import RichEditor from '@/components/Editor/RichEditor.vue'
 
 const store = usePageEditorStore()
 const collapsed     = ref(false)
@@ -424,6 +510,10 @@ const isNavbarFrame = computed(() => {
   const t = store.selected.frame?.type
   return t === 'PV_HEADER' || t === 'HEADER'
 })
+const isFooterFrame = computed(() => {
+  const t = store.selected.frame?.type
+  return t === 'PV_FOOTER' || t === 'FOOTER'
+})
 
 const v  = (key) => el.value?.value?.[key]
 const up = (key, value) => store.updateSelectedElementValue(key, value)
@@ -435,16 +525,15 @@ const setFrameData = (key, value) => {
   frame.data[key] = value
 }
 
-const elPad    = (side) => el.value?.padding?.pc?.[side] ?? 0
+const DEVICE_PAD_KEY = computed(() => ({ desktop: 'pc', tablet: 'tablet', mobile: 'phone' }[store.currentDevice] || 'pc'))
+
+const elPad = (side) => el.value?.padding?.[DEVICE_PAD_KEY.value]?.[side] ?? 0
 const setElPad = (side, value) => {
   if (!el.value) return
   if (!el.value.padding) el.value.padding = { pc: {}, tablet: {}, phone: {} }
-  if (!el.value.padding.pc)     el.value.padding.pc     = {}
-  if (!el.value.padding.tablet) el.value.padding.tablet = {}
-  if (!el.value.padding.phone)  el.value.padding.phone  = {}
-  el.value.padding.pc[side]     = value
-  el.value.padding.tablet[side] = value
-  el.value.padding.phone[side]  = value
+  const key = DEVICE_PAD_KEY.value
+  if (!el.value.padding[key]) el.value.padding[key] = {}
+  el.value.padding[key][side] = value
 }
 
 const setFramePad = (side, value) => {
@@ -455,7 +544,102 @@ const setFramePad = (side, value) => {
   frame.data.padding.pc[side] = value
 }
 
-const colorOrWhite = (val) => (!val || val === 'transparent') ? '#ffffff' : val
+const frameBgDefault = computed(() => isFooterFrame.value ? '#0a1628' : '#ffffff')
+const colorOrWhite   = (val) => (!val || val === 'transparent') ? frameBgDefault.value : val
+
+// ── Multi-column width control (from element panel) ──
+const MULTI_COL_COUNTS = { '1_2': 2, '1_3': 3, '1_4': 4, 'A': 2, 'B': 2, 'C': 2, 'D': 2 }
+const COMPOSITE_DEFAULTS = { A: [67, 33], B: [33, 67], C: [67, 33], D: [25, 75] }
+
+const elementFrame = computed(() => {
+  const element = el.value
+  if (!element) return null
+  for (const basemap of store.currentPageBasemaps) {
+    for (const frame of (basemap.frames || [])) {
+      if (Array.isArray(frame.elements) && frame.elements.includes(element)) return frame
+    }
+  }
+  return null
+})
+
+const elementFrameLayout     = computed(() => parseFrameLayout(elementFrame.value?.type))
+const isElementInMultiColFrame = computed(() => elementFrameLayout.value in MULTI_COL_COUNTS)
+const elementColCount         = computed(() => MULTI_COL_COUNTS[elementFrameLayout.value] || 0)
+
+const elementColWidths = computed(() => {
+  if (!isElementInMultiColFrame.value || !elementFrame.value) return []
+  const stored = elementFrame.value.data?.columnWidths
+  const n = elementColCount.value
+  if (Array.isArray(stored) && stored.length === n) return stored
+  const layout = elementFrameLayout.value
+  if (layout in COMPOSITE_DEFAULTS) return COMPOSITE_DEFAULTS[layout]
+  if (n === 2) return [50, 50]
+  if (n === 3) return [34, 33, 33]
+  if (n === 4) return [25, 25, 25, 25]
+  return []
+})
+
+const elementColLabels = computed(() => {
+  if (['A', 'B', 'C', 'D'].includes(elementFrameLayout.value)) return ['左欄', '右欄']
+  return elementColWidths.value.map((_, i) => `欄 ${i + 1}`)
+})
+
+const _applyColWidths = (frame, n, current, index, rawVal) => {
+  const min = 10
+  const max = 100 - (n - 1) * min
+  const newVal = Math.min(Math.max(min, Math.round(rawVal)), max)
+  if (!frame.data) frame.data = {}
+  if (n === 2) {
+    const w = [0, 0]; w[index] = newVal; w[1 - index] = 100 - newVal
+    frame.data.columnWidths = w; return
+  }
+  const others = Array.from({ length: n }, (_, i) => i).filter(i => i !== index)
+  const otherSum = others.reduce((s, i) => s + current[i], 0)
+  const newOtherSum = 100 - newVal
+  const newWidths = [...current]; newWidths[index] = newVal
+  let allocated = 0
+  for (let k = 0; k < others.length - 1; k++) {
+    const i = others[k]
+    const ratio = otherSum > 0 ? current[i] / otherSum : 1 / others.length
+    newWidths[i] = Math.max(min, Math.round(ratio * newOtherSum))
+    allocated += newWidths[i]
+  }
+  newWidths[others[others.length - 1]] = Math.max(min, newOtherSum - allocated)
+  frame.data.columnWidths = newWidths
+}
+
+const updateElementColWidth = (index, rawVal) => {
+  const frame = elementFrame.value
+  if (!frame) return
+  _applyColWidths(frame, elementColCount.value, [...elementColWidths.value], index, rawVal)
+}
+
+const resetElementColWidths = () => {
+  const frame = elementFrame.value
+  if (!frame) return
+  if (!frame.data) frame.data = {}
+  const layout = elementFrameLayout.value
+  if (layout in COMPOSITE_DEFAULTS) { frame.data.columnWidths = [...COMPOSITE_DEFAULTS[layout]]; return }
+  const n = elementColCount.value
+  if (n === 2) frame.data.columnWidths = [50, 50]
+  else if (n === 3) frame.data.columnWidths = [34, 33, 33]
+  else if (n === 4) frame.data.columnWidths = [25, 25, 25, 25]
+}
+
+const flattenPageTree = (nodes, depth = 0) => {
+  const result = []
+  for (const n of nodes || []) {
+    result.push({ slug: n.slug, label: n.tab || n.seoTitle || n.slug, depth })
+    if (n.children?.length) result.push(...flattenPageTree(n.children, depth + 1))
+  }
+  return result
+}
+const navPages = computed(() => flattenPageTree(store.pageTree))
+
+const onImgSelectPage = (slug) => {
+  up('linkPage', slug)
+  up('link', slug ? `/${slug}` : '')
+}
 
 // Logo upload (Navbar)
 const handleLogoUpload = async (e) => {
@@ -575,9 +759,14 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
 // ── Panel main (collapsible content) ──
 .panel-main {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 }
 
 // ── No selection state ──
@@ -605,6 +794,9 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .panel-title {
@@ -633,20 +825,14 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
 
 // ── Panel body ──
 .panel-body {
-  flex: 1;
-  overflow-y: auto;
   padding: 14px 14px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: #fafafa;
-
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
 }
 
-// ── Section collapse ──
+// ── Padding section ──
 .prop-section {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -655,13 +841,25 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
 }
 
 .prop-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
   font-size: 11px;
   font-weight: 600;
   color: #6b7280;
-  cursor: pointer;
-  user-select: none;
-  padding: 2px 0;
   letter-spacing: 0.02em;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.pad-device-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: #0891B2;
+  background: #e0f2fe;
+  padding: 1px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.01em;
 }
 
 // ── Prop groups ──
@@ -852,30 +1050,56 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
 .padding-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 3px;
+  gap: 4px;
   align-items: center;
   justify-items: center;
+  padding: 10px 12px 12px;
+}
+
+.pad-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.pad-dir {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .pad-input {
   width: 100%;
-  padding: 4px 4px;
+  padding: 5px 4px;
   border: 1px solid #e5e7eb;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
   outline: none;
   box-sizing: border-box;
   background: #fff;
   font-family: inherit;
-  &:focus { border-color: #0891B2; }
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus { border-color: #0891B2; box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.1); }
 }
 
 .pad-center {
-  font-size: 9px;
-  color: #d1d5db;
-  text-align: center;
-  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.pad-center-box {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #e5e7eb;
+  border-radius: 5px;
+  background: #f9fafb;
 }
 
 // ── Image preview ──
@@ -887,6 +1111,7 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
   border-radius: 6px;
   background: #f9fafb;
 }
+
 
 .upload-btn {
   display: flex;
@@ -980,5 +1205,97 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
   text-align: right;
   display: block;
   margin-top: -2px;
+}
+
+// ── Column width editor ──
+.col-width-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.col-reset-btn {
+  font-size: 10px;
+  color: #9ca3af;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1px 7px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  &:hover { border-color: #0891B2; color: #0891B2; }
+}
+
+.col-width-preview {
+  display: flex;
+  height: 26px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  gap: 1px;
+  margin-bottom: 8px;
+}
+
+.col-preview-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #0891B2;
+  background: #e0f2fe;
+  min-width: 0;
+  overflow: hidden;
+  transition: flex 0.15s;
+}
+
+.col-width-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.col-width-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.col-width-label {
+  font-size: 11px;
+  color: #6b7280;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.col-width-slider {
+  flex: 1;
+  accent-color: #0891B2;
+  cursor: pointer;
+  height: 4px;
+  min-width: 0;
+}
+
+.col-width-num {
+  width: 42px;
+  padding: 3px 5px;
+  border: 1px solid #e5e7eb;
+  border-radius: 5px;
+  font-size: 11px;
+  text-align: right;
+  outline: none;
+  box-sizing: border-box;
+  background: #fff;
+  font-family: inherit;
+  flex-shrink: 0;
+  &:focus { border-color: #0891B2; }
+}
+
+.col-unit {
+  font-size: 11px;
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 </style>

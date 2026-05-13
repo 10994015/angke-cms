@@ -54,6 +54,7 @@
           <FooterBasemap
             v-else-if="isFooterBasemap(basemap)"
             :frame-data="basemap.frames?.[0]?.data || {}"
+            :frame="basemap.frames?.[0] || null"
           />
 
           <!-- 一般 content basemap -->

@@ -1,16 +1,21 @@
 ﻿<template>
-  <footer class="pv-footer" :class="`device-${store.currentDevice}`" :style="footerStyle">
+  <footer
+    class="pv-footer"
+    :class="[`device-${store.currentDevice}`, { 'is-selected': isSelected }]"
+    :style="footerStyle"
+    @click.stop="frame && store.selectFrame(frame)"
+  >
     <div class="pv-footer-container">
 
       <!-- 上方：Logo + 聯絡電話 -->
       <div class="pv-footer-top">
         <div class="pv-footer-brand">
           <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="pv-logo-img" />
-          <span v-else class="pv-logo-icon">
-            <svg width="34" height="34" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="6" fill="#0891B2"/>
-              <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
+          <span v-else class="pv-logo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
             </svg>
+            <span>上傳 Logo</span>
           </span>
           <span v-if="displayName" class="pv-logo-name">{{ displayName }}</span>
         </div>
@@ -24,8 +29,8 @@
 
       <!-- 中間：連結欄 + 聯絡資訊欄 -->
       <div class="pv-footer-links-area">
-        <div v-for="(column, colIndex) in columns" :key="colIndex" class="pv-footer-col">
-          <a v-for="item in column" :key="item" href="#" class="pv-footer-link">{{ item }}</a>
+        <div v-for="(column, colIndex) in navColumns" :key="colIndex" class="pv-footer-col">
+          <a v-for="item in column" :key="item.slug" :href="`/${item.slug}`" class="pv-footer-link">{{ item.label }}</a>
         </div>
 
         <div v-if="displayAddress || displayEmail" class="pv-footer-col pv-footer-col--contact">
@@ -51,22 +56,25 @@ import { usePageEditorStore } from '@/stores/pageEditor'
 
 const props = defineProps({
   frameData: { type: Object, default: () => ({}) },
+  frame:     { type: Object, default: null },
 })
 
 const store = usePageEditorStore()
 
+const isSelected     = computed(() => store.selected.frame === props.frame)
 const displayName    = computed(() => props.frameData.tenantName    || props.frameData.brandName    || '')
 const displayPhone   = computed(() => props.frameData.tenantPhone   || null)
 const displayAddress = computed(() => props.frameData.tenantAddress || null)
 const displayEmail   = computed(() => props.frameData.tenantEmail   || null)
 const logoSrc        = computed(() => props.frameData.logoImgSrc    || null)
 
-const columns = computed(() =>
-  props.frameData.columns || [
-    ['關於我們', '最新消息', '服務項目'],
-    ['宮廟地圖', '聯絡我們', '隱私政策'],
-  ]
-)
+const navColumns = computed(() => {
+  const pages = store.pageTree
+  if (!pages.length) return []
+  const items = pages.map(p => ({ slug: p.slug, label: p.tab || p.seoTitle || p.slug }))
+  const mid   = Math.ceil(items.length / 2)
+  return [items.slice(0, mid), items.slice(mid)].filter(c => c.length > 0)
+})
 
 const displayCopyright = computed(() =>
   props.frameData.copyright ||
@@ -75,7 +83,7 @@ const displayCopyright = computed(() =>
 
 const footerStyle = computed(() => {
   const s = {}
-  if (props.frameData.footerBgColor)   s['background']       = props.frameData.footerBgColor
+  s['background'] = props.frameData.background || '#0a1628'
   if (props.frameData.footerTextColor) s['--pv-footer-text'] = props.frameData.footerTextColor
   return s
 })
@@ -83,10 +91,15 @@ const footerStyle = computed(() => {
 
 <style scoped lang="scss">
 .pv-footer {
-  background: #06082d;
+  background: #0a1628;
   color: var(--pv-footer-text, rgba(255, 255, 255, 0.82));
   word-break: keep-all;
   overflow-wrap: break-word;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover   { box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.25); }
+  &.is-selected { box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.5); }
 }
 
 .pv-footer-container {
@@ -115,7 +128,19 @@ const footerStyle = computed(() => {
   object-fit: contain;
 }
 
-.pv-logo-icon { display: flex; align-items: center; flex-shrink: 0; }
+.pv-logo-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px dashed rgba(255,255,255,0.3);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+  svg { width: 18px; height: 18px; }
+}
 
 .pv-logo-name {
   font-size: 18px;

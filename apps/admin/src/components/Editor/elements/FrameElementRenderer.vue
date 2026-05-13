@@ -25,17 +25,26 @@
       />
 
       <!-- IMG -->
-      <div v-else-if="type === 'IMG'" class="el-image">
-        <img
-          v-if="val.src"
-          :src="val.src"
-          :alt="val.alt || '圖片'"
-          :style="{ objectFit: val.objectFit || 'cover' }"
-          class="el-image-img"
-        />
-        <div v-if="!val.src" class="img-no-src">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <span>點擊設定圖片</span>
+      <div v-else-if="type === 'IMG'" class="el-image" :class="{ 'el-image--empty': !val.src }">
+        <component
+          :is="val.link ? 'a' : 'div'"
+          class="el-image-inner"
+          v-bind="val.link ? { href: val.link, target: val.linkTarget || '_self', rel: 'noopener noreferrer' } : {}"
+        >
+          <img
+            :src="val.src || '/images/default.png'"
+            :alt="val.alt || '圖片'"
+            :style="{ objectFit: val.objectFit || 'cover' }"
+            class="el-image-img"
+          />
+        </component>
+        <div v-if="!val.src" class="img-upload-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>請上傳圖片</span>
         </div>
       </div>
 
@@ -187,6 +196,7 @@ const meta    = computed(() => props.element?.metadata || {})
 .renderer {
   width: 100%;
   min-height: 60px;
+  height: auto;
   position: relative;
   transition: all 0.15s;
 
@@ -241,7 +251,13 @@ const meta    = computed(() => props.element?.metadata || {})
   display: block;
   position: relative;
   line-height: 0;
-  overflow: hidden;
+
+  &.el-image--empty { min-height: 180px; }
+}
+
+.el-image-inner {
+  display: block;
+  width: 100%;
 }
 
 .el-image-img {
@@ -252,19 +268,21 @@ const meta    = computed(() => props.element?.metadata || {})
   border-radius: 4px;
 }
 
-.img-no-src {
+.img-upload-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  background: rgba(249,250,251,0.85);
-  color: #9ca3af;
-  font-size: 12px;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.52);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
   border-radius: 4px;
-  svg { width: 24px; height: 24px; }
+  letter-spacing: 0.03em;
+  svg { width: 28px; height: 28px; opacity: 0.9; }
 }
 
 .el-text {

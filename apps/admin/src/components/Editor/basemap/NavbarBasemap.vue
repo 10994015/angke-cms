@@ -29,30 +29,41 @@
           v-for="tab in enrichedTabs"
           :key="tab.slug"
           class="pv-nav-item-wrapper"
+          :ref="(el) => { if (el) navWrapperRefs[tab.slug] = el; else delete navWrapperRefs[tab.slug] }"
           @mouseenter="onTopNavEnter(tab.slug)"
-          @mouseleave="hoveredNav = null"
+          @mouseleave="onNavWrapperLeave"
         >
           <a
             href="#"
             class="pv-nav-item"
             :class="{ active: isSlugActive(tab.slug) }"
-            @click.prevent="store.loadPageContent(tab.slug)"
+            @click.prevent="onNavItemClick(tab.slug)"
           >
             {{ tab.name }}
-            <svg v-if="hasChildren(tab.slug)" class="pv-nav-chevron" :class="{ open: hoveredNav === tab.slug }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg v-if="hasChildren(tab.slug)" class="pv-nav-chevron" :class="{ open: activeDropdownSlug === tab.slug }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </a>
-
-          <transition name="nav-dropdown">
-            <NavDropdownMenu
-              v-if="hoveredNav === tab.slug && hasChildren(tab.slug)"
-              :items="getChildren(tab.slug)"
-              :depth="0"
-            />
-          </transition>
         </div>
       </nav>
+
+      <Teleport to="body">
+        <transition name="nav-dropdown">
+          <div
+            v-if="activeDropdownSlug && hasChildren(activeDropdownSlug)"
+            class="pv-nav-dropdown-portal"
+            :style="{ position: 'fixed', top: dropdownPortalPos.top, left: dropdownPortalPos.left, zIndex: 99999 }"
+            @mouseenter="onDropdownPortalEnter"
+            @mouseleave="onDropdownPortalLeave"
+          >
+            <NavDropdownMenu
+              :items="getChildren(activeDropdownSlug)"
+              :depth="0"
+              :is-portal="true"
+            />
+          </div>
+        </transition>
+      </Teleport>
 
       <!-- 桌機右側：登入 + 語言切換 -->
       <div v-if="isDesktop" class="pv-nav-actions">
@@ -169,7 +180,10 @@ const isDesktop      = computed(() => store.currentDevice === 'desktop')
 const mobileMenuOpen = ref(false)
 const localeMenuOpen = ref(false)
 const localeBtnRef   = ref(null)
-const hoveredNav     = ref(null)
+const activeDropdownSlug = ref(null)
+const dropdownPortalPos  = ref({ top: '0px', left: '0px' })
+const navWrapperRefs     = {}
+let   closeTimer         = null
 
 // ── Children cache (slug → [{tab, slug}]) ──────────────────────────────────
 
@@ -221,7 +235,11 @@ provide('navDropdownState', {
   hasChildren,
   ensureChildren,
   isActive: isSlugActive,
-  navigate: (slug) => store.loadPageContent(slug),
+  navigate: (slug) => {
+    store.loadPageContent(slug)
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+    activeDropdownSlug.value = null
+  },
 })
 
 // ── Logo ───────────────────────────────────────────────────────────────────
@@ -264,8 +282,46 @@ const enrichedTabs = computed(() =>
 // ── Desktop nav hover ──────────────────────────────────────────────────────
 
 const onTopNavEnter = async (slug) => {
-  hoveredNav.value = slug
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+  activeDropdownSlug.value = slug
+  const el = navWrapperRefs[slug]
+  if (el) {
+    const rect = el.getBoundingClientRect()
+    dropdownPortalPos.value = { top: rect.bottom + 4 + 'px', left: rect.left + rect.width / 2 + 'px' }
+  }
   await ensureChildren(slug)
+}
+
+const onNavWrapperLeave = () => {
+  closeTimer = setTimeout(() => { activeDropdownSlug.value = null }, 150)
+}
+
+const onDropdownPortalEnter = () => {
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+}
+
+const onDropdownPortalLeave = () => {
+  closeTimer = setTimeout(() => { activeDropdownSlug.value = null }, 150)
+}
+
+const onNavItemClick = (slug) => {
+  if (hasChildren(slug)) {
+    if (activeDropdownSlug.value === slug) {
+      if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+      activeDropdownSlug.value = null
+    } else {
+      activeDropdownSlug.value = slug
+      const el = navWrapperRefs[slug]
+      if (el) {
+        const rect = el.getBoundingClientRect()
+        dropdownPortalPos.value = { top: rect.bottom + 4 + 'px', left: rect.left + rect.width / 2 + 'px' }
+      }
+    }
+  } else {
+    store.loadPageContent(slug)
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+    activeDropdownSlug.value = null
+  }
 }
 
 // ── Mobile flat-list ───────────────────────────────────────────────────────
@@ -367,9 +423,16 @@ const handleLocaleChange = (locale) => {
   store.reloadCurrentPage(locale)
 }
 
-const handleOutsideClick = () => { localeMenuOpen.value = false }
+const handleOutsideClick = () => {
+  localeMenuOpen.value = false
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+  activeDropdownSlug.value = null
+}
 onMounted(()   => document.addEventListener('click', handleOutsideClick))
-onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+  if (closeTimer) clearTimeout(closeTimer)
+})
 </script>
 
 <style scoped lang="scss">
@@ -704,8 +767,8 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 // ── 動畫 ──
 .nav-dropdown-enter-active { transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
 .nav-dropdown-leave-active { transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1); }
-.nav-dropdown-enter-from   { opacity: 0; transform: translateX(-50%) translateY(-6px); }
-.nav-dropdown-leave-to     { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+.nav-dropdown-enter-from   { opacity: 0; transform: translateY(-6px); }
+.nav-dropdown-leave-to     { opacity: 0; transform: translateY(-4px); }
 
 .mobile-menu-enter-active { transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
 .mobile-menu-leave-active { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
