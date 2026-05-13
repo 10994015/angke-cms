@@ -31,7 +31,6 @@
       <!-- 區塊列表 -->
       <template v-else>
         <template v-for="(basemap, bIdx) in store.currentPageBasemaps" :key="bIdx">
-
           <!-- HEADER basemap -->
           <BasemapWrapper
             v-if="isHeaderBasemap(basemap)"
