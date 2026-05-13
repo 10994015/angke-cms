@@ -21,7 +21,7 @@
     <!-- 版面配置設定 -->
     <template v-else-if="selectedFrame && !el">
       <div class="panel-header">
-        <span class="panel-title">{{ isNavbarFrame ? '導覽列設定' : isFooterFrame ? '頁尾設定' : '版面配置設定' }}</span>
+        <span class="panel-title">{{ isNavbarFrame ? '導覽列設定' : isFooterFrame ? '頁尾設定' : isFirstPictureFrame ? '首圖設定' : isCarouselWallFrame ? '輪播牆設定' : '版面配置設定' }}</span>
         <button class="close-btn" @click="store.clearSelection()">✕</button>
       </div>
       <div class="panel-body">
@@ -43,6 +43,235 @@
           <div class="prop-divider" />
         </template>
 
+        <!-- FIRST_PICTURE 設定 -->
+        <template v-else-if="isFirstPictureFrame">
+          <div class="prop-group">
+            <label class="prop-label">背景圖片</label>
+            <div v-if="frameData.heroBgImgSrc" class="logo-preview-wrap">
+              <img :src="frameData.heroBgImgSrc" class="logo-preview" alt="背景圖預覽" />
+              <button class="logo-remove-btn" @click="setFrameData('heroBgImgSrc', null)">✕</button>
+            </div>
+            <label class="upload-btn-label" :class="{ loading: heroImgUploading }">
+              <input type="file" accept="image/*" class="hidden-input" :disabled="heroImgUploading" @change="handleHeroImgUpload" />
+              {{ heroImgUploading ? '上傳中...' : (frameData.heroBgImgSrc ? '更換背景圖' : '上傳背景圖') }}
+            </label>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">主標題</label>
+            <input type="text" class="prop-input" :value="frameData.heroTitle || ''" @input="setFrameData('heroTitle', $event.target.value)" placeholder="主標題文字" />
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">副標題</label>
+            <textarea class="prop-textarea" :value="frameData.heroSubtitle || ''" @input="setFrameData('heroSubtitle', $event.target.value)" rows="3" placeholder="副標題文字"></textarea>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">高度</label>
+            <div class="unit-row">
+              <input type="number" class="prop-input unit-num" min="0"
+                :value="parseVal(frameData.heroHeight, 'px').num"
+                @input="setFrameData('heroHeight', $event.target.value + parseVal(frameData.heroHeight, 'px').unit)"
+                placeholder="600"
+              />
+              <select class="unit-select"
+                :value="parseVal(frameData.heroHeight, 'px').unit"
+                @change="setFrameData('heroHeight', (parseVal(frameData.heroHeight, 'px').num || '600') + $event.target.value)"
+              >
+                <option value="px">px</option>
+                <option value="vh">vh</option>
+              </select>
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">遮罩透明度 ({{ frameData.overlayOpacity ?? 40 }}%)</label>
+            <input type="range" min="0" max="100" :value="frameData.overlayOpacity ?? 40" @input="setFrameData('overlayOpacity', +$event.target.value)" class="prop-range" />
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">遮罩顏色</label>
+            <div class="color-row">
+              <input type="color" class="color-input" :value="frameData.overlayColor || '#000000'" @input="setFrameData('overlayColor', $event.target.value)" />
+              <input type="text" class="prop-input" :value="frameData.overlayColor || ''" @input="setFrameData('overlayColor', $event.target.value)" />
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">標題顏色</label>
+            <div class="color-row">
+              <input type="color" class="color-input" :value="frameData.titleColor || '#ffffff'" @input="setFrameData('titleColor', $event.target.value)" />
+              <input type="text" class="prop-input" :value="frameData.titleColor || ''" @input="setFrameData('titleColor', $event.target.value)" />
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">標題大小</label>
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(frameData.titleFontSize, 'px').num"
+              @input="setFrameData('titleFontSize', $event.target.value ? $event.target.value + 'px' : '')"
+              placeholder="48"
+            />
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">副標題顏色</label>
+            <div class="color-row">
+              <input type="color" class="color-input" :value="frameData.subtitleColor || '#eeeeee'" @input="setFrameData('subtitleColor', $event.target.value)" />
+              <input type="text" class="prop-input" :value="frameData.subtitleColor || ''" @input="setFrameData('subtitleColor', $event.target.value)" />
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">副標題大小</label>
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(frameData.subtitleFontSize, 'px').num"
+              @input="setFrameData('subtitleFontSize', $event.target.value ? $event.target.value + 'px' : '')"
+              placeholder="20"
+            />
+          </div>
+        </template>
+
+        <!-- CAROUSEL_WALL 設定 -->
+        <template v-else-if="isCarouselWallFrame">
+          <div class="prop-group">
+            <label class="prop-label">輪播高度</label>
+            <input type="number" class="prop-input" min="200" step="50"
+              :value="frameData.carouselWallHeight ?? 600"
+              @input="setFrameData('carouselWallHeight', +$event.target.value)"
+              placeholder="600"
+            />
+          </div>
+          <div class="prop-group">
+            <div class="checkbox-list">
+              <label>
+                <input type="checkbox" :checked="frameData.carouselWallAutoPlay ?? true" @change="setFrameData('carouselWallAutoPlay', $event.target.checked)" />
+                自動播放
+              </label>
+            </div>
+          </div>
+          <div v-if="frameData.carouselWallAutoPlay ?? true" class="prop-group">
+            <label class="prop-label">播放間隔 (ms)</label>
+            <input type="number" class="prop-input" min="500" step="500"
+              :value="frameData.carouselWallInterval ?? 5000"
+              @input="setFrameData('carouselWallInterval', +$event.target.value)"
+            />
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">輪播圖片（{{ (frameData.caroiselWallImgs || []).length }} 張）</label>
+
+            <div class="cw-card-list">
+              <div v-for="(img, i) in (frameData.caroiselWallImgs || [])" :key="i" class="cw-img-card">
+
+                <!-- Card header -->
+                <div class="cw-card-header">
+                  <img v-if="img.desktopSrc" :src="img.desktopSrc" class="cw-card-thumb" :alt="`圖片 ${i + 1}`" />
+                  <div v-else class="cw-card-thumb cw-card-thumb--empty" />
+                  <span class="cw-card-num">第 {{ i + 1 }} 張</span>
+                  <button class="list-del" @click="removeCarouselWallImg(i)" title="刪除此張">✕</button>
+                </div>
+
+                <!-- Device rows -->
+                <div v-for="slot in CW_DEVICE_SLOTS" :key="slot.srcKey" class="cw-device-row">
+                  <span class="cw-device-label">{{ slot.label }}</span>
+                  <div class="cw-device-content">
+                    <template v-if="img[slot.srcKey]">
+                      <img :src="img[slot.srcKey]" class="cw-device-thumb" alt="" />
+                      <button class="cw-device-remove" @click="removeCwDeviceImg(i, slot.srcKey, slot.idKey)" title="移除">✕</button>
+                    </template>
+                    <label v-else class="cw-upload-btn-sm" :class="{ loading: isCwDeviceUploading(i, slot.srcKey) }">
+                      <input type="file" accept="image/*" class="hidden-input"
+                        :disabled="isCwDeviceUploading(i, slot.srcKey)"
+                        @change="uploadCwDeviceImg($event, i, slot.srcKey, slot.idKey)"
+                      />
+                      {{ isCwDeviceUploading(i, slot.srcKey) ? '上傳中...' : '上傳圖片' }}
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Title -->
+                <div class="cw-card-field">
+                  <label class="prop-label">標題</label>
+                  <input type="text" class="prop-input"
+                    :value="img.title || ''"
+                    @input="updateCwImgField(i, 'title', $event.target.value)"
+                    placeholder="此張圖片的標題（選填）"
+                  />
+                </div>
+
+                <!-- Subtitle -->
+                <div class="cw-card-field">
+                  <label class="prop-label">副標題</label>
+                  <textarea class="prop-textarea"
+                    :value="img.subtitle || ''"
+                    @input="updateCwImgField(i, 'subtitle', $event.target.value)"
+                    rows="2"
+                    placeholder="副標題（選填）"
+                  />
+                </div>
+
+                <!-- Collapsible style section -->
+                <div class="cw-style-toggle" @click="toggleCwStyle(i)">
+                  <span>樣式設定</span>
+                  <svg class="section-chevron" :class="{ 'is-open': cwExpandedStyles.includes(i) }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div v-show="cwExpandedStyles.includes(i)" class="cw-style-body">
+                  <div class="cw-card-field">
+                    <label class="prop-label">遮罩透明度（{{ img.overlayOpacity ?? 40 }}%）</label>
+                    <input type="range" min="0" max="100" :value="img.overlayOpacity ?? 40"
+                      @input="updateCwImgField(i, 'overlayOpacity', +$event.target.value)"
+                      class="prop-range"
+                    />
+                  </div>
+                  <div class="cw-card-field">
+                    <label class="prop-label">遮罩顏色</label>
+                    <div class="color-row">
+                      <input type="color" class="color-input" :value="img.overlayColor || '#000000'"
+                        @input="updateCwImgField(i, 'overlayColor', $event.target.value)" />
+                      <input type="text" class="prop-input" :value="img.overlayColor || ''"
+                        @input="updateCwImgField(i, 'overlayColor', $event.target.value)" />
+                    </div>
+                  </div>
+                  <div class="cw-card-field">
+                    <label class="prop-label">標題顏色</label>
+                    <div class="color-row">
+                      <input type="color" class="color-input" :value="img.titleColor || '#ffffff'"
+                        @input="updateCwImgField(i, 'titleColor', $event.target.value)" />
+                      <input type="text" class="prop-input" :value="img.titleColor || ''"
+                        @input="updateCwImgField(i, 'titleColor', $event.target.value)" />
+                    </div>
+                  </div>
+                  <div class="cw-card-field">
+                    <label class="prop-label">標題大小</label>
+                    <input type="number" class="prop-input" min="0"
+                      :value="img.titleFontSize ?? ''"
+                      @input="updateCwImgField(i, 'titleFontSize', $event.target.value ? +$event.target.value : '')"
+                      placeholder="48"
+                    />
+                  </div>
+                  <div class="cw-card-field">
+                    <label class="prop-label">副標題顏色</label>
+                    <div class="color-row">
+                      <input type="color" class="color-input" :value="img.subtitleColor || '#eeeeee'"
+                        @input="updateCwImgField(i, 'subtitleColor', $event.target.value)" />
+                      <input type="text" class="prop-input" :value="img.subtitleColor || ''"
+                        @input="updateCwImgField(i, 'subtitleColor', $event.target.value)" />
+                    </div>
+                  </div>
+                  <div class="cw-card-field">
+                    <label class="prop-label">副標題大小</label>
+                    <input type="number" class="prop-input" min="0"
+                      :value="img.subtitleFontSize ?? ''"
+                      @input="updateCwImgField(i, 'subtitleFontSize', $event.target.value ? +$event.target.value : '')"
+                      placeholder="20"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <label class="upload-btn-label" :class="{ loading: carouselWallUploading }">
+              <input type="file" accept="image/*" class="hidden-input" :disabled="carouselWallUploading" @change="handleCarouselWallUpload" />
+              {{ carouselWallUploading ? '上傳中...' : '＋ 新增圖片' }}
+            </label>
+          </div>
+        </template>
+
+        <!-- 一般 frame：背景色 + 內距 -->
+        <template v-if="!isFirstPictureFrame && !isCarouselWallFrame">
         <div class="prop-group">
           <label class="prop-label">背景色</label>
           <div class="color-row">
@@ -50,9 +279,12 @@
             <input type="text" class="prop-input" :value="frameData.background || ''" @input="setFrameData('background', $event.target.value)" placeholder="transparent / #ffffff" />
           </div>
         </div>
-        <div class="prop-group">
-          <label class="prop-label">版面配置內距 (px)</label>
-          <div class="padding-grid">
+        <div class="prop-section">
+          <div class="prop-section-title prop-section-title--btn" @click="framePadCollapsed = !framePadCollapsed">
+            <span>內距設定</span>
+            <svg class="section-chevron" :class="{ 'is-open': !framePadCollapsed }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div v-show="!framePadCollapsed" class="padding-grid">
             <div />
             <div class="pad-field">
               <span class="pad-dir">上</span>
@@ -76,6 +308,7 @@
             <div />
           </div>
         </div>
+        </template>
 
       </div>
     </template>
@@ -88,86 +321,11 @@
       </div>
       <div class="panel-body">
 
-        <!-- 元件內距 -->
-        <div class="prop-section">
-          <div class="prop-section-title">
-            <span>內距設定</span>
-            <span class="pad-device-badge">{{ { desktop: '桌面', tablet: '平板', mobile: '手機' }[store.currentDevice] || '桌面' }}</span>
-          </div>
-          <div class="padding-grid">
-            <div />
-            <div class="pad-field">
-              <span class="pad-dir">上</span>
-              <input type="number" class="pad-input" :value="elPad('top')" @input="setElPad('top', +$event.target.value)" />
-            </div>
-            <div />
-            <div class="pad-field">
-              <span class="pad-dir">左</span>
-              <input type="number" class="pad-input" :value="elPad('left')" @input="setElPad('left', +$event.target.value)" />
-            </div>
-            <div class="pad-center"><div class="pad-center-box"></div></div>
-            <div class="pad-field">
-              <span class="pad-dir">右</span>
-              <input type="number" class="pad-input" :value="elPad('right')" @input="setElPad('right', +$event.target.value)" />
-            </div>
-            <div />
-            <div class="pad-field">
-              <span class="pad-dir">下</span>
-              <input type="number" class="pad-input" :value="elPad('bottom')" @input="setElPad('bottom', +$event.target.value)" />
-            </div>
-            <div />
-          </div>
-        </div>
-
-        <!-- 欄位寬度（多欄版面） -->
-        <template v-if="isElementInMultiColFrame">
-          <div class="prop-group">
-            <div class="col-width-header">
-              <label class="prop-label">欄位寬度</label>
-              <button class="col-reset-btn" @click="resetElementColWidths">重置</button>
-            </div>
-            <div class="col-width-preview">
-              <div v-for="(w, i) in elementColWidths" :key="i" class="col-preview-seg" :style="{ flex: w }">{{ w }}%</div>
-            </div>
-            <div class="col-width-rows">
-              <div v-for="(w, i) in elementColWidths" :key="i" class="col-width-row">
-                <span class="col-width-label">{{ elementColLabels[i] }}</span>
-                <input type="range" class="col-width-slider"
-                  :min="10" :max="100 - (elementColCount - 1) * 10"
-                  :value="w" @input="updateElementColWidth(i, +$event.target.value)" />
-                <input type="number" class="col-width-num"
-                  :min="10" :max="100 - (elementColCount - 1) * 10"
-                  :value="w" @change="updateElementColWidth(i, +$event.target.value)" />
-                <span class="col-unit">%</span>
-              </div>
-            </div>
-          </div>
-        </template>
-
         <!-- TEXT -->
         <template v-if="el.type === 'TEXT'">
           <div class="prop-group">
             <label class="prop-label">文字內容</label>
             <RichEditor :model-value="v('text') || ''" @update:model-value="up('text', $event)" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">字體大小</label>
-            <input type="text" class="prop-input" :value="v('fontSize') || ''" @input="up('fontSize', $event.target.value)" placeholder="16px" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">對齊方式</label>
-            <div class="btn-group">
-              <button class="toggle-btn" :class="{ active: v('align') === 'left' }" @click="up('align', 'left')">靠左</button>
-              <button class="toggle-btn" :class="{ active: v('align') === 'center' }" @click="up('align', 'center')">置中</button>
-              <button class="toggle-btn" :class="{ active: v('align') === 'right' }" @click="up('align', 'right')">靠右</button>
-            </div>
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">文字顏色</label>
-            <div class="color-row">
-              <input type="color" class="color-input" :value="v('color') || '#333333'" @input="up('color', $event.target.value)" />
-              <input type="text" class="prop-input" :value="v('color') || ''" @input="up('color', $event.target.value)" placeholder="#333333" />
-            </div>
           </div>
         </template>
 
@@ -222,11 +380,37 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">寬度</label>
-            <input type="text" class="prop-input" :value="v('width') || ''" @input="up('width', $event.target.value)" placeholder="100%" />
+            <div class="unit-row">
+              <input type="number" class="prop-input unit-num" min="0"
+                :value="parseVal(v('width'), '%').num"
+                @input="upUnit('width', $event.target.value, parseVal(v('width'), '%').unit)"
+                placeholder="100"
+              />
+              <select class="unit-select"
+                :value="parseVal(v('width'), '%').unit"
+                @change="upUnit('width', parseVal(v('width'), '%').num, $event.target.value)"
+              >
+                <option value="%">%</option>
+                <option value="px">px</option>
+              </select>
+            </div>
           </div>
           <div class="prop-group">
             <label class="prop-label">高度</label>
-            <input type="text" class="prop-input" :value="v('height') || ''" @input="up('height', $event.target.value)" placeholder="auto" />
+            <div class="unit-row">
+              <input type="number" class="prop-input unit-num" min="0"
+                :value="parseVal(v('height'), 'px').num"
+                @input="upUnit('height', $event.target.value, parseVal(v('height'), 'px').unit)"
+                placeholder="自動"
+              />
+              <select class="unit-select"
+                :value="parseVal(v('height'), 'px').unit"
+                @change="upUnit('height', parseVal(v('height'), 'px').num, $event.target.value)"
+              >
+                <option value="px">px</option>
+                <option value="%">%</option>
+              </select>
+            </div>
           </div>
           <div class="prop-group">
             <label class="prop-label">填滿方式</label>
@@ -239,7 +423,11 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">圓角</label>
-            <input type="text" class="prop-input" :value="v('borderRadius') || ''" @input="up('borderRadius', $event.target.value)" placeholder="0px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('borderRadius'), 'px').num"
+              @input="upPx('borderRadius', $event.target.value)"
+              placeholder="0"
+            />
           </div>
         </template>
 
@@ -263,7 +451,11 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">字體大小</label>
-            <input type="text" class="prop-input" :value="v('fontSize') || ''" @input="up('fontSize', $event.target.value)" placeholder="16px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('fontSize'), 'px').num"
+              @input="upPx('fontSize', $event.target.value)"
+              placeholder="16"
+            />
           </div>
           <div class="prop-group">
             <label class="prop-label">背景色</label>
@@ -281,7 +473,11 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">圓角</label>
-            <input type="text" class="prop-input" :value="v('borderRadius') || ''" @input="up('borderRadius', $event.target.value)" placeholder="6px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('borderRadius'), 'px').num"
+              @input="upPx('borderRadius', $event.target.value)"
+              placeholder="6"
+            />
           </div>
           <div class="prop-group">
             <label class="prop-label">內距</label>
@@ -292,62 +488,48 @@
         <!-- CAROUSEL_IMG -->
         <template v-else-if="el.type === 'CAROUSEL_IMG'">
           <div class="prop-group">
-            <label class="prop-label">背景圖片網址</label>
-            <input type="text" class="prop-input" :value="v('heroBgImgSrc') || ''" @input="up('heroBgImgSrc', $event.target.value)" placeholder="https://..." />
+            <label class="prop-label">輪播高度</label>
+            <div class="unit-row">
+              <input type="number" class="prop-input unit-num" min="100"
+                :value="v('height') ?? 400"
+                @input="up('height', +$event.target.value)"
+              />
+              <span class="unit-suffix">px</span>
+            </div>
+            <div class="btn-group" style="margin-top:5px">
+              <button class="toggle-btn" :class="{ active: (v('height') ?? 400) === 200 }" @click="up('height', 200)">小</button>
+              <button class="toggle-btn" :class="{ active: (v('height') ?? 400) === 400 }" @click="up('height', 400)">中</button>
+              <button class="toggle-btn" :class="{ active: (v('height') ?? 400) === 600 }" @click="up('height', 600)">大</button>
+              <button class="toggle-btn" :class="{ active: (v('height') ?? 400) === 800 }" @click="up('height', 800)">特大</button>
+            </div>
           </div>
           <div class="prop-group">
-            <label class="prop-label">上傳背景圖片</label>
-            <label class="upload-btn">
-              <input type="file" accept="image/*" @change="handleCarouselBgUpload" style="display:none" />
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              {{ uploading ? '上傳中...' : '選擇圖片' }}
+            <label class="prop-label">輪播圖片（{{ (v('imgs') || []).length }}）</label>
+            <div class="carousel-img-list">
+              <div v-for="(img, i) in (v('imgs') || [])" :key="i" class="carousel-img-item">
+                <img :src="img.src || img" class="carousel-img-thumb" :alt="`圖片 ${i + 1}`" />
+                <button class="list-del" @click="removeCarouselImg(i)" title="刪除">✕</button>
+              </div>
+            </div>
+            <label class="upload-btn-label" :class="{ loading: carouselImgUploading }">
+              <input type="file" accept="image/*" class="hidden-input" :disabled="carouselImgUploading" @change="handleCarouselImgUpload" />
+              {{ carouselImgUploading ? '上傳中...' : '＋ 新增圖片' }}
             </label>
           </div>
           <div class="prop-group">
-            <label class="prop-label">最小高度</label>
-            <input type="text" class="prop-input" :value="v('heroHeight') || ''" @input="up('heroHeight', $event.target.value)" placeholder="600px" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">主標題</label>
-            <input type="text" class="prop-input" :value="v('heroTitle') || ''" @input="up('heroTitle', $event.target.value)" placeholder="主標題文字" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">主標題顏色</label>
-            <div class="color-row">
-              <input type="color" class="color-input" :value="v('titleColor') || '#ffffff'" @input="up('titleColor', $event.target.value)" />
-              <input type="text" class="prop-input" :value="v('titleColor') || ''" @input="up('titleColor', $event.target.value)" />
+            <div class="checkbox-list">
+              <label>
+                <input type="checkbox" :checked="v('autoPlay') !== false" @change="up('autoPlay', $event.target.checked)" />
+                自動播放
+              </label>
             </div>
           </div>
-          <div class="prop-group">
-            <label class="prop-label">主標題大小</label>
-            <input type="text" class="prop-input" :value="v('titleFontSize') || ''" @input="up('titleFontSize', $event.target.value)" placeholder="48px" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">副標題</label>
-            <input type="text" class="prop-input" :value="v('heroSubtitle') || ''" @input="up('heroSubtitle', $event.target.value)" placeholder="副標題文字" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">副標題顏色</label>
-            <div class="color-row">
-              <input type="color" class="color-input" :value="v('subtitleColor') || '#eeeeee'" @input="up('subtitleColor', $event.target.value)" />
-              <input type="text" class="prop-input" :value="v('subtitleColor') || ''" @input="up('subtitleColor', $event.target.value)" />
-            </div>
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">副標題大小</label>
-            <input type="text" class="prop-input" :value="v('subtitleFontSize') || ''" @input="up('subtitleFontSize', $event.target.value)" placeholder="20px" />
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">遮罩顏色</label>
-            <div class="color-row">
-              <input type="color" class="color-input" :value="v('overlayColor') || '#000000'" @input="up('overlayColor', $event.target.value)" />
-              <input type="text" class="prop-input" :value="v('overlayColor') || ''" @input="up('overlayColor', $event.target.value)" />
-            </div>
-          </div>
-          <div class="prop-group">
-            <label class="prop-label">遮罩透明度 (0–100)</label>
-            <input type="range" min="0" max="100" :value="v('overlayOpacity') ?? 40" @input="up('overlayOpacity', +$event.target.value)" class="prop-range" />
-            <span class="range-val">{{ v('overlayOpacity') ?? 40 }}%</span>
+          <div v-if="v('autoPlay') !== false" class="prop-group">
+            <label class="prop-label">播放間隔（毫秒）</label>
+            <input type="number" class="prop-input" min="500" step="500"
+              :value="v('interval') ?? 3000"
+              @input="up('interval', +$event.target.value)"
+            />
           </div>
         </template>
 
@@ -390,7 +572,11 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">標題大小</label>
-            <input type="text" class="prop-input" :value="v('titleFontSize') || ''" @input="up('titleFontSize', $event.target.value)" placeholder="16px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('titleFontSize'), 'px').num"
+              @input="upPx('titleFontSize', $event.target.value)"
+              placeholder="16"
+            />
           </div>
           <div class="prop-group">
             <label class="prop-label">標題粗細</label>
@@ -409,7 +595,11 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">內容大小</label>
-            <input type="text" class="prop-input" :value="v('contentFontSize') || ''" @input="up('contentFontSize', $event.target.value)" placeholder="15px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('contentFontSize'), 'px').num"
+              @input="upPx('contentFontSize', $event.target.value)"
+              placeholder="15"
+            />
           </div>
           <div class="prop-group">
             <label class="prop-label">FAQ 列表 ({{ (v('items') || []).length }} 項)</label>
@@ -435,7 +625,11 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">高度</label>
-            <input type="text" class="prop-input" :value="v('height') || ''" @input="up('height', $event.target.value)" placeholder="400px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('height'), 'px').num"
+              @input="upPx('height', $event.target.value)"
+              placeholder="400"
+            />
           </div>
           <div class="prop-group">
             <label class="prop-label">標題（accessibility）</label>
@@ -454,11 +648,28 @@
           </div>
           <div class="prop-group">
             <label class="prop-label">線條粗細</label>
-            <input type="text" class="prop-input" :value="v('thickness') || ''" @input="up('thickness', $event.target.value)" placeholder="2px" />
+            <input type="number" class="prop-input" min="0"
+              :value="parseVal(v('thickness'), 'px').num"
+              @input="upPx('thickness', $event.target.value)"
+              placeholder="2"
+            />
           </div>
           <div class="prop-group">
             <label class="prop-label">線條寬度</label>
-            <input type="text" class="prop-input" :value="v('width') || ''" @input="up('width', $event.target.value)" placeholder="100%" />
+            <div class="unit-row">
+              <input type="number" class="prop-input unit-num" min="0"
+                :value="parseVal(v('width'), '%').num"
+                @input="upUnit('width', $event.target.value, parseVal(v('width'), '%').unit)"
+                placeholder="100"
+              />
+              <select class="unit-select"
+                :value="parseVal(v('width'), '%').unit"
+                @change="upUnit('width', parseVal(v('width'), '%').num, $event.target.value)"
+              >
+                <option value="%">%</option>
+                <option value="px">px</option>
+              </select>
+            </div>
           </div>
           <div class="prop-group">
             <label class="prop-label">線條樣式</label>
@@ -475,6 +686,65 @@
           <p>{{ el.type }} 尚無設定面板</p>
         </div>
 
+        <!-- 欄位寬度（多欄版面） -->
+        <template v-if="isElementInMultiColFrame">
+          <div class="prop-group">
+            <div class="col-width-header">
+              <label class="prop-label">欄位寬度</label>
+              <button class="col-reset-btn" @click="resetElementColWidths">重置</button>
+            </div>
+            <div class="col-width-preview">
+              <div v-for="(w, i) in elementColWidths" :key="i" class="col-preview-seg" :style="{ flex: w }">{{ w }}%</div>
+            </div>
+            <div class="col-width-rows">
+              <div v-for="(w, i) in elementColWidths" :key="i" class="col-width-row">
+                <span class="col-width-label">{{ elementColLabels[i] }}</span>
+                <input type="range" class="col-width-slider"
+                  :min="10" :max="100 - (elementColCount - 1) * 10"
+                  :value="w" @input="updateElementColWidth(i, +$event.target.value)" />
+                <input type="number" class="col-width-num"
+                  :min="10" :max="100 - (elementColCount - 1) * 10"
+                  :value="w" @change="updateElementColWidth(i, +$event.target.value)" />
+                <span class="col-unit">%</span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- 元件內距 -->
+        <div class="prop-section">
+          <div class="prop-section-title prop-section-title--btn" @click="elPadCollapsed = !elPadCollapsed">
+            <span>內距設定</span>
+            <div class="section-title-right">
+              <span class="pad-device-badge">{{ { desktop: '桌面', tablet: '平板', mobile: '手機' }[store.currentDevice] || '桌面' }}</span>
+              <svg class="section-chevron" :class="{ 'is-open': !elPadCollapsed }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div v-show="!elPadCollapsed" class="padding-grid">
+            <div />
+            <div class="pad-field">
+              <span class="pad-dir">上</span>
+              <input type="number" class="pad-input" :value="elPad('top')" @input="setElPad('top', +$event.target.value)" />
+            </div>
+            <div />
+            <div class="pad-field">
+              <span class="pad-dir">左</span>
+              <input type="number" class="pad-input" :value="elPad('left')" @input="setElPad('left', +$event.target.value)" />
+            </div>
+            <div class="pad-center"><div class="pad-center-box"></div></div>
+            <div class="pad-field">
+              <span class="pad-dir">右</span>
+              <input type="number" class="pad-input" :value="elPad('right')" @input="setElPad('right', +$event.target.value)" />
+            </div>
+            <div />
+            <div class="pad-field">
+              <span class="pad-dir">下</span>
+              <input type="number" class="pad-input" :value="elPad('bottom')" @input="setElPad('bottom', +$event.target.value)" />
+            </div>
+            <div />
+          </div>
+        </div>
+
       </div>
     </template>
     </div><!-- /panel-main -->
@@ -487,15 +757,103 @@ import { usePageEditorStore, parseFrameLayout } from '@/stores/pageEditor'
 import RichEditor from '@/components/Editor/RichEditor.vue'
 
 const store = usePageEditorStore()
-const collapsed     = ref(false)
+const collapsed        = ref(false)
+const framePadCollapsed = ref(true)
+const elPadCollapsed    = ref(true)
 
 watch(() => store.selected, (sel) => {
   if ((sel.basemap || sel.frame || sel.element || sel.cell) && collapsed.value) {
     collapsed.value = false
   }
 }, { deep: true })
-const uploading     = ref(false)
-const logoUploading = ref(false)
+const uploading            = ref(false)
+const logoUploading        = ref(false)
+const heroImgUploading     = ref(false)
+const carouselWallUploading = ref(false)
+
+const handleHeroImgUpload = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const frame = store.selected.frame
+  if (!frame) return
+  heroImgUploading.value = true
+  const result = await store.uploadImage(file)
+  if (result && frame.data) {
+    frame.data.heroBgImgSrc = result.fileUrl
+    frame.data.heroBgImgId  = result.id
+  }
+  heroImgUploading.value = false
+  e.target.value = ''
+}
+
+const handleCarouselWallUpload = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const frame = store.selected.frame
+  if (!frame) return
+  carouselWallUploading.value = true
+  const result = await store.uploadImage(file)
+  if (result) {
+    if (!frame.data) frame.data = {}
+    if (!Array.isArray(frame.data.caroiselWallImgs)) frame.data.caroiselWallImgs = []
+    frame.data.caroiselWallImgs.push({ desktopSrc: result.fileUrl, desktopImgId: result.id, title: '', subtitle: '' })
+  }
+  carouselWallUploading.value = false
+  e.target.value = ''
+}
+
+const removeCarouselWallImg = (index) => {
+  const frame = store.selected.frame
+  if (!frame?.data?.caroiselWallImgs) return
+  frame.data.caroiselWallImgs.splice(index, 1)
+}
+
+const CW_DEVICE_SLOTS = [
+  { label: '電腦', srcKey: 'desktopSrc', idKey: 'desktopImgId' },
+  { label: '平板', srcKey: 'tabletSrc',  idKey: 'tabletImgId'  },
+  { label: '手機', srcKey: 'mobileSrc',  idKey: 'mobileImgId'  },
+]
+
+const cwExpandedStyles  = ref([])
+const cwDeviceUploading = ref(null)
+
+const toggleCwStyle = (i) => {
+  const idx = cwExpandedStyles.value.indexOf(i)
+  if (idx >= 0) cwExpandedStyles.value.splice(idx, 1)
+  else cwExpandedStyles.value.push(i)
+}
+
+const isCwDeviceUploading = (imgIndex, srcKey) =>
+  cwDeviceUploading.value?.imgIndex === imgIndex && cwDeviceUploading.value?.srcKey === srcKey
+
+const updateCwImgField = (imgIndex, field, value) => {
+  const frame = store.selected.frame
+  if (!frame?.data?.caroiselWallImgs?.[imgIndex]) return
+  frame.data.caroiselWallImgs[imgIndex][field] = value
+}
+
+const uploadCwDeviceImg = async (e, imgIndex, srcKey, idKey) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const frame = store.selected.frame
+  if (!frame?.data?.caroiselWallImgs?.[imgIndex]) return
+  const imgEntry = frame.data.caroiselWallImgs[imgIndex]
+  cwDeviceUploading.value = { imgIndex, srcKey }
+  const result = await store.uploadImage(file)
+  if (result) {
+    imgEntry[srcKey] = result.fileUrl
+    imgEntry[idKey]  = result.id
+  }
+  cwDeviceUploading.value = null
+  e.target.value = ''
+}
+
+const removeCwDeviceImg = (imgIndex, srcKey, idKey) => {
+  const frame = store.selected.frame
+  if (!frame?.data?.caroiselWallImgs?.[imgIndex]) return
+  frame.data.caroiselWallImgs[imgIndex][srcKey] = null
+  frame.data.caroiselWallImgs[imgIndex][idKey]  = null
+}
 
 const ELEMENT_LABELS = {
   TEXT: '文字', IMG: '圖片', BUTTON: '按鈕',
@@ -514,9 +872,22 @@ const isFooterFrame = computed(() => {
   const t = store.selected.frame?.type
   return t === 'PV_FOOTER' || t === 'FOOTER'
 })
+const isFirstPictureFrame  = computed(() => store.selected.frame?.type === 'FIRST_PICTURE')
+const isCarouselWallFrame  = computed(() => store.selected.frame?.type === 'CAROUSEL_WALL')
+const isSpecialFrame       = computed(() => isFirstPictureFrame.value || isCarouselWallFrame.value)
 
 const v  = (key) => el.value?.value?.[key]
 const up = (key, value) => store.updateSelectedElementValue(key, value)
+
+// ── Unit helpers ──
+const parseVal = (raw, defaultUnit = 'px') => {
+  if (raw === null || raw === undefined || raw === '') return { num: '', unit: defaultUnit }
+  const s = String(raw).trim()
+  const m = s.match(/^([\d.]*)(%|px|vh|vw|em|rem)?$/)
+  return { num: m?.[1] ?? '', unit: m?.[2] || defaultUnit }
+}
+const upPx   = (key, num) => up(key, num !== '' && num != null ? `${num}px` : '')
+const upUnit = (key, num, unit) => up(key, num !== '' && num != null ? `${num}${unit}` : '')
 
 const setFrameData = (key, value) => {
   const frame = store.selected.frame
@@ -655,40 +1026,46 @@ const handleLogoUpload = async (e) => {
   e.target.value = ''
 }
 
-// Carousel background upload
-const handleCarouselBgUpload = async (e) => {
-  const file = e.target.files?.[0]
-  if (!file) return
-  uploading.value = true
-  const result = await store.uploadImage(file)
-  if (result) { up('heroBgImgSrc', result.fileUrl); up('heroBgImgId', result.id) }
-  uploading.value = false
-  e.target.value = ''
-}
-
 // IMG upload
 const handleImgUpload = async (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+  const targetEl = el.value
+  if (!targetEl) return
   uploading.value = true
   const result = await store.uploadImage(file)
-  if (result) {
-    up('src', result.fileUrl)
-    up('id', result.id)
-    console.log('[IMG upload] element.value after upload:', JSON.parse(JSON.stringify(el.value?.value || {})))
+  if (result && targetEl.value) {
+    targetEl.value.src = result.fileUrl
+    targetEl.value.id  = result.id
   }
   uploading.value = false
   e.target.value = ''
 }
 
-// Carousel
-const updateCarouselImg = (i, key, value) => {
+// Carousel image upload / manage
+const carouselImgUploading = ref(false)
+
+const handleCarouselImgUpload = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const targetEl = el.value
+  if (!targetEl) return
+  carouselImgUploading.value = true
+  const result = await store.uploadImage(file)
+  if (result && targetEl.value) {
+    const imgs = [...(targetEl.value.imgs || [])]
+    imgs.push({ id: result.id, src: result.fileUrl })
+    targetEl.value.imgs = imgs
+  }
+  carouselImgUploading.value = false
+  e.target.value = ''
+}
+
+const removeCarouselImg = (i) => {
   const imgs = [...(v('imgs') || [])]
-  imgs[i] = { ...imgs[i], [key]: value }
+  imgs.splice(i, 1)
   up('imgs', imgs)
 }
-const addCarouselImg    = () => { const imgs = [...(v('imgs') || [])]; imgs.push({ src: '', alt: '', id: null }); up('imgs', imgs) }
-const removeCarouselImg = (i) => { const imgs = [...(v('imgs') || [])]; imgs.splice(i, 1); up('imgs', imgs) }
 
 // Accordion
 const updateAccordionItem = (i, key, value) => {
@@ -850,6 +1227,29 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
   color: #6b7280;
   letter-spacing: 0.02em;
   border-bottom: 1px solid #f3f4f6;
+
+  &--btn {
+    cursor: pointer;
+    user-select: none;
+    &:hover { background: #f9fafb; }
+  }
+}
+
+.section-title-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-chevron {
+  width: 13px;
+  height: 13px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+
+  &.is-open { transform: rotate(180deg); }
 }
 
 .pad-device-badge {
@@ -993,6 +1393,38 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
   &:focus { border-color: #0891B2; }
 }
 
+// ── Unit row (number + unit select) ──
+.unit-row {
+  display: flex;
+  gap: 4px;
+}
+
+.unit-num { flex: 1; min-width: 0; }
+
+.unit-suffix {
+  font-size: 12px;
+  color: #9ca3af;
+  padding: 0 8px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.unit-select {
+  width: 54px;
+  flex-shrink: 0;
+  padding: 6px 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  background: #fff;
+  font-family: inherit;
+  text-align: center;
+  transition: border-color 0.15s;
+  &:focus { border-color: #0891B2; }
+}
+
 // ── Color row ──
 .color-row {
   display: flex;
@@ -1128,6 +1560,190 @@ const removeAccordionItem = (i) => { const items = [...(v('items') || [])]; item
   background: #fff;
   svg { width: 14px; height: 14px; flex-shrink: 0; }
   &:hover { border-color: #0891B2; color: #0891B2; background: #f0f9ff; }
+}
+
+// ── Carousel image thumbnail list ──
+.carousel-img-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.carousel-img-item {
+  position: relative;
+  flex-shrink: 0;
+
+  &:hover .list-del { display: flex; }
+  .list-del {
+    display: none;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    border-radius: 50%;
+  }
+}
+
+.carousel-img-thumb {
+  width: 64px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+}
+
+// ── Carousel wall card UI ──
+.cw-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cw-img-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cw-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cw-card-thumb {
+  width: 56px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #f3f4f6;
+
+  &--empty {
+    background: #e5e7eb;
+    border: 1px dashed #d1d5db;
+  }
+}
+
+.cw-card-num {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.cw-device-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cw-device-label {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+.cw-device-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cw-device-thumb {
+  width: 60px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #f3f4f6;
+}
+
+.cw-device-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:hover { background: #fecaca; }
+}
+
+.cw-upload-btn-sm {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  border: 1px dashed #d1d5db;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fff;
+  min-width: 0;
+
+  &:hover { border-color: #0891B2; color: #0891B2; background: #f0f9ff; }
+  &.loading { opacity: 0.6; cursor: not-allowed; }
+}
+
+.cw-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child { border-bottom: none; }
+}
+
+.cw-style-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.15s;
+
+  &:hover { background: #f9fafb; }
+}
+
+.cw-style-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #fafafa;
 }
 
 // ── List editor ──

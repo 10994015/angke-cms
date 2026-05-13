@@ -144,7 +144,7 @@ onMounted(() => load(1))
             <td class="center-text">{{ role.users?.length ?? 0 }}</td>
             <td class="dim-text">{{ formatDate(role.createdAt) }}</td>
             <td>
-              <button class="btn-edit" @click="router.push({ path: `/roles/${role.roleId}/edit`, state: { role } })">
+              <button class="btn-edit" @click="router.push(`/roles/${role.roleId}/edit`)">
                 <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
                   <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                 </svg>

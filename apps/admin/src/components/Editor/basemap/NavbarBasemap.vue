@@ -305,6 +305,7 @@ const onDropdownPortalLeave = () => {
 }
 
 const onNavItemClick = (slug) => {
+  store.loadPageContent(slug)
   if (hasChildren(slug)) {
     if (activeDropdownSlug.value === slug) {
       if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
@@ -318,7 +319,6 @@ const onNavItemClick = (slug) => {
       }
     }
   } else {
-    store.loadPageContent(slug)
     if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
     activeDropdownSlug.value = null
   }
@@ -441,7 +441,7 @@ onUnmounted(() => {
   border-bottom: 1px solid #eee;
   padding: 0 2rem;
   position: relative;
-  z-index: 10;
+  z-index: 1000;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 

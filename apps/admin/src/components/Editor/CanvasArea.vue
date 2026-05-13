@@ -225,13 +225,13 @@ const addFirstSection = () => {
 .canvas-loading {
   position: absolute;
   inset: 0;
-  z-index: 50;
+  z-index: 3000;
   background: rgba(229, 231, 235, 0.7);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: all;
 }
 
 .canvas-spinner {

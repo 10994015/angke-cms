@@ -2,41 +2,56 @@
 import { ref, computed } from 'vue'
 import axiosClient from '../axios'
 
-// ── 各元件預設 value ──
+// ── 各元件預設 value（工廠函數，每次回傳全新物件，避免共用參考） ──
+export const makeDefaultElementValue = (type) => {
+  switch (type) {
+    case 'TEXT':
+      return { text: '請輸入文字內容', fontSize: '16px', color: '#333333', align: 'left' }
+    case 'IMG':
+      return { id: null, src: null, alt: '', width: '100%', height: 'auto', objectFit: 'cover' }
+    case 'BUTTON':
+      return { text: '按鈕文字', link: '#', align: 'center', bgColor: '#0891B2', textColor: '#ffffff', fontSize: '16px', padding: '12px 32px', borderRadius: '6px' }
+    case 'CAROUSEL_IMG':
+      return {
+        height: 400,
+        imgs: [],
+        autoPlay: true,
+        interval: 3000,
+      }
+    case 'GOOGLE_MAP':
+      return { address: '台北市信義區信義路五段7號', lat: 25.0339639, lng: 121.5644722, zoom: 17 }
+    case 'IFRAME':
+      return { src: '', height: '400px', title: '' }
+    case 'HORIZON_LINE':
+      return { color: '#E0E0E0', thickness: '2px', width: '100%', style: 'solid' }
+    case 'ACCORDION':
+      return {
+        items: [
+          { title: '常見問題一', content: '請在此輸入說明內容。' },
+          { title: '常見問題二', content: '請在此輸入說明內容。' },
+        ],
+        titleColor: '#333333',
+        titleFontSize: '16px',
+        titleFontWeight: '600',
+        contentColor: '#666666',
+        contentFontSize: '15px',
+        defaultOpen: false,
+      }
+    default:
+      return {}
+  }
+}
+
+// 保留向後相容（讀取用，不要直接拿來當 element.value）
 export const DEFAULT_ELEMENT_VALUE = {
-  TEXT:         { text: '請輸入文字內容', fontSize: '16px', color: '#333333', align: 'left' },
-  IMG:          { id: null, src: null, alt: '', width: '100%', height: 'auto', objectFit: 'cover' },
-  BUTTON:       { text: '按鈕文字', link: '#', align: 'center', bgColor: '#0891B2', textColor: '#ffffff', fontSize: '16px', padding: '12px 32px', borderRadius: '6px' },
-  CAROUSEL_IMG: {
-    heroBgImgSrc: null,
-    heroTitle: '',
-    heroSubtitle: '',
-    heroHeight: '600px',
-    overlayOpacity: 40,
-    overlayColor: '#000000',
-    titleColor: '#ffffff',
-    titleFontSize: '48px',
-    subtitleColor: '#eeeeee',
-    subtitleFontSize: '20px',
-    imgs: [],
-    autoPlay: true,
-    interval: 3000,
-  },
-  GOOGLE_MAP:   { address: '台北市信義區信義路五段7號', lat: 25.0339639, lng: 121.5644722, zoom: 17 },
-  IFRAME: { src: '', height: '400px', title: '' },
-  HORIZON_LINE: { color: '#E0E0E0', thickness: '2px', width: '100%', style: 'solid' },
-  ACCORDION: {
-    items: [
-      { title: '常見問題一', content: '請在此輸入說明內容。' },
-      { title: '常見問題二', content: '請在此輸入說明內容。' },
-    ],
-    titleColor: '#333333',
-    titleFontSize: '16px',
-    titleFontWeight: '600',
-    contentColor: '#666666',
-    contentFontSize: '15px',
-    defaultOpen: false,
-  },
+  TEXT:         makeDefaultElementValue('TEXT'),
+  IMG:          makeDefaultElementValue('IMG'),
+  BUTTON:       makeDefaultElementValue('BUTTON'),
+  CAROUSEL_IMG: makeDefaultElementValue('CAROUSEL_IMG'),
+  GOOGLE_MAP:   makeDefaultElementValue('GOOGLE_MAP'),
+  IFRAME:       makeDefaultElementValue('IFRAME'),
+  HORIZON_LINE: makeDefaultElementValue('HORIZON_LINE'),
+  ACCORDION:    makeDefaultElementValue('ACCORDION'),
 }
 
 // ── 各版面配置類型的格子數 ──
@@ -201,6 +216,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
             if (!el.padding) el.padding = createDefaultPadding()
             return el
           })
+        } else if (!Array.isArray(frame.elements)) {
+          frame.elements = []
         }
         return frame
       })
@@ -320,32 +337,37 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     return newFrame
   }
 
-  const SYSTEM_FRAME_DEFAULTS = {
-    CAROUSEL_WALL: {
-      caroiselWallImgs: [],
-      carouselWallHeight: 600,
-      carouselWallAutoPlay: true,
-      carouselWallInterval: 5000,
-    },
-    FIRST_PICTURE: {
-      heroBgImgSrc: null,
-      heroTitle: '',
-      heroSubtitle: '',
-      heroHeight: '600px',
-      overlayOpacity: 40,
-      overlayColor: '#000000',
-      titleColor: '#ffffff',
-      titleFontSize: '48px',
-      subtitleColor: '#eeeeee',
-      subtitleFontSize: '20px',
-    },
+  const makeSystemFrameData = (frameType) => {
+    switch (frameType) {
+      case 'CAROUSEL_WALL':
+        return {
+          caroiselWallImgs: [],
+          carouselWallHeight: 600,
+          carouselWallAutoPlay: true,
+          carouselWallInterval: 5000,
+        }
+      case 'FIRST_PICTURE':
+        return {
+          heroBgImgSrc: null,
+          heroTitle: '',
+          heroSubtitle: '',
+          heroHeight: '600px',
+          overlayOpacity: 40,
+          overlayColor: '#000000',
+          titleColor: '#ffffff',
+          titleFontSize: '48px',
+          subtitleColor: '#eeeeee',
+          subtitleFontSize: '20px',
+        }
+      default:
+        return {}
+    }
   }
 
   const addSystemFrame = (basemap, frameType, defaultData = {}) => {
     if (!basemap) return null
     if (!Array.isArray(basemap.frames)) basemap.frames = []
-    const defaults = SYSTEM_FRAME_DEFAULTS[frameType] ?? {}
-    const newFrame = { type: frameType, data: { ...defaults, ...defaultData }, isDeletable: true }
+    const newFrame = { type: frameType, data: { ...makeSystemFrameData(frameType), ...defaultData }, isDeletable: true }
     basemap.frames.push(newFrame)
     return newFrame
   }
@@ -383,7 +405,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
     const newElement = {
       type: elementType,
-      value: { ...(DEFAULT_ELEMENT_VALUE[elementType] || {}) },
+      value: makeDefaultElementValue(elementType),
       metadata: createDefaultMetadata(),
       padding: createDefaultPadding(),
       width: null,
@@ -475,9 +497,31 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     return null
   }
 
+  const saveDraftForSlug = async (slug) => {
+    if (!tenantId.value || !slug) return false
+    const val = pageData.value[slug]
+    if (!val) return false
+    try {
+      const contentJson = validateAndFixContent(val.data)
+      const res = await axiosClient.patch(
+        `/backend/web-site/${tenantId.value}/page/${slug}/draft-content`,
+        { locale: currentLocale.value || 'ZH-TW', contentJson }
+      )
+      return res.data.statusCode === 200
+    } catch { return false }
+  }
+
   const loadPageContent = async (slug) => {
     if (!tenantId.value || !slug) return
+
     isLoading.value = true
+
+    // 先 loading，再儲存草稿，再切頁
+    const prevSlug = currentPageSlug.value
+    if (prevSlug && prevSlug !== slug && pageData.value[prevSlug]) {
+      const saved = await saveDraftForSlug(prevSlug)
+      if (!saved) { error.value = '儲存草稿失敗，請稍後再試'; isLoading.value = false; return }
+    }
     try {
       const res = await axiosClient.get(
         `/backend/web-site/${tenantId.value}/page/${slug}/draft-content`,
@@ -619,7 +663,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
     currentPageBasemaps, currentPageSystemFrames,
 
-    fetchLocales, fetchAvailableSystemFrames, fetchSystemFrames, fetchAllPages, saveAllPages, saveCurrentPage,
+    fetchLocales, fetchAvailableSystemFrames, fetchSystemFrames, fetchAllPages, saveAllPages, saveCurrentPage, saveDraftForSlug,
     loadTemplateAsEditorData, fetchWebsiteSettings, updateWebsiteSettings,
     publishWebsite, uploadImage, deleteDraft,
 

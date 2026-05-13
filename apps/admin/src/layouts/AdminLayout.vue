@@ -54,6 +54,8 @@ const handleLogout = async () => {
       <div class="sidebar-header">
         <img src="/images/logo.png" alt="Logo" class="sidebar-logo" />
         <span v-show="!collapsed" class="sidebar-brand">Angke On Prem</span>
+
+        <!-- 收合按鈕 -->
         <button class="sidebar-collapse-btn" @click="collapsed = !collapsed" :title="collapsed ? '展開側欄' : '收合側欄'">
           <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
             <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" v-if="!collapsed"/>
@@ -162,8 +164,8 @@ const handleLogout = async () => {
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-  width: 240px;
   flex-shrink: 0;
+  width: 240px;
   background: #fff;
   border-right: 1px solid #e5e7eb;
   display: flex;
@@ -222,7 +224,6 @@ const handleLogout = async () => {
   border-radius: 4px;
   padding: 0;
   transition: background 0.1s, color 0.1s;
-  margin-left: auto;
 
   &:hover { background: #f3f4f6; color: #374151; }
 }

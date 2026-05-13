@@ -1,4 +1,5 @@
 <template>
+  <div class="sidebar-host" :class="{ 'is-pinned': pinned }">
   <aside
     class="left-sidebar"
     :class="{ 'is-collapsed': isCollapsed }"
@@ -17,6 +18,11 @@
       <button class="tab" :class="{ active: activeTab === 'elements' }" @click="selectTab('elements')" title="元件">
         <svg v-if="!isCollapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
         <span>元件</span>
+      </button>
+      <button class="pin-btn" :class="{ pinned }" @click="pinned = !pinned" :title="pinned ? '取消固定' : '固定側欄'">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+        </svg>
       </button>
     </div>
 
@@ -124,14 +130,8 @@
       </div>
     </div>
 
-    <div class="sidebar-footer">
-      <button class="pin-btn" :class="{ pinned }" @click="pinned = !pinned" :title="pinned ? '取消固定' : '固定側欄'">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
-        </svg>
-      </button>
-    </div>
   </aside>
+  </div>
 </template>
 
 <script setup>
@@ -184,9 +184,9 @@ const DOUBLE_ROW_FRAMES = [
 
 const COMPOSITE_FRAMES = [
   { type: 'FRAME_A', label: 'A 型 (1大+2小)', rightCols: 2, previewClass: 'fp--composite-left' },
-  { type: 'FRAME_B', label: 'B 型 (2小+1大)', rightCols: 1, previewClass: 'fp--composite-right' },
+  { type: 'FRAME_B', label: 'B 型 (2小+1大)', rightCols: 2, previewClass: 'fp--composite-right' },
   { type: 'FRAME_C', label: 'C 型 (1大+3小)', rightCols: 3, previewClass: 'fp--composite-left' },
-  { type: 'FRAME_D', label: 'D 型 (3小+1大)', rightCols: 1, previewClass: 'fp--composite-right' },
+  { type: 'FRAME_D', label: 'D 型 (3小+1大)', rightCols: 3, previewClass: 'fp--composite-right' },
 ]
 
 const onSystemFrameDragStart = (event, sf) => {
@@ -226,11 +226,30 @@ const onFrameClick = (frameType) => {
 </script>
 
 <style scoped lang="scss">
-.left-sidebar {
-  width: 228px;
+// ── Host: always occupies 36px rail in flow when unpinned ──
+.sidebar-host {
+  position: relative;
   flex-shrink: 0;
+  align-self: stretch;
+  width: 36px;
+
+  // Pinned: host is transparent to layout; aside becomes a direct flex child
+  &.is-pinned {
+    display: contents;
+  }
+}
+
+// ── Sidebar: overlays when unpinned, in-flow when pinned ──
+.left-sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 228px;
+  z-index: 100;
   background: #fff;
   border-right: 1px solid #e5e7eb;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -238,6 +257,15 @@ const onFrameClick = (frameType) => {
 
   &.is-collapsed {
     width: 36px;
+    box-shadow: none;
+  }
+
+  // Pinned: in flow, no overlay shadow
+  .sidebar-host.is-pinned & {
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: none;
+    bottom: auto;
   }
 }
 
@@ -259,6 +287,36 @@ const onFrameClick = (frameType) => {
     min-height: unset;
     align-items: stretch;
     border-bottom: none;
+  }
+}
+
+.pin-btn {
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-bottom: 1px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  border-radius: 5px;
+  transition: background 0.15s, color 0.15s;
+  svg { transition: transform 0.2s; transform: rotate(45deg); }
+  &:hover { background: #e5e7eb; color: #374151; }
+  &.pinned { color: #0891B2; svg { transform: rotate(0deg); } }
+
+  .is-collapsed & {
+    margin-left: 0;
+    margin-bottom: 0;
+    width: 100%;
+    height: auto;
+    min-height: 36px;
+    border-radius: 0;
+    border-bottom: 1px solid #f3f4f6;
   }
 }
 
@@ -324,36 +382,6 @@ const onFrameClick = (frameType) => {
   }
 }
 
-.sidebar-footer {
-  flex-shrink: 0;
-  border-top: 1px solid #f3f4f6;
-  padding: 5px 6px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-
-  .is-collapsed & {
-    justify-content: center;
-    padding: 5px 0;
-  }
-}
-
-.pin-btn {
-  width: 26px;
-  height: 26px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9ca3af;
-  border-radius: 5px;
-  transition: background 0.15s, color 0.15s;
-  svg { transition: transform 0.2s; transform: rotate(45deg); }
-  &:hover { background: #e5e7eb; color: #374151; }
-  &.pinned { color: #0891B2; svg { transform: rotate(0deg); } }
-}
 
 // ── Sidebar body ──
 .sidebar-body {
