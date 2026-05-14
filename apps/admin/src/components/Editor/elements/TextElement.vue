@@ -1,14 +1,30 @@
 <template>
   <div
     class="el-text"
+    :style="boxStyle"
     v-html="val.text || '<p>（空白文字）</p>'"
   />
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   val:  { type: Object, default: () => ({}) },
   meta: { type: Object, default: () => ({}) },
+})
+
+const boxStyle = computed(() => {
+  const v = props.val
+  const bw = v.borderWidth ?? 0
+  return {
+    ...(bw > 0 ? {
+      border: `${bw}px ${v.borderStyle || 'solid'} ${v.borderColor || '#e5e7eb'}`,
+    } : {}),
+    borderRadius: v.borderRadius ? `${v.borderRadius}px` : undefined,
+    backgroundColor: v.bgColor || undefined,
+    padding: v.padding ? `${v.padding}px` : undefined,
+  }
 })
 </script>
 

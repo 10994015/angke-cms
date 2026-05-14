@@ -6,7 +6,10 @@ import axiosClient from '../axios'
 export const makeDefaultElementValue = (type) => {
   switch (type) {
     case 'TEXT':
-      return { text: '請輸入文字內容', fontSize: '16px', color: '#333333', align: 'left' }
+      return { text: '請輸入文字內容', fontSize: '16px', color: '#333333', align: 'left',
+        borderWidth: 0, borderColor: '#e5e7eb', borderStyle: 'solid', borderRadius: 0,
+        bgColor: '', padding: 0,
+      }
     case 'IMG':
       return { id: null, src: null, alt: '', width: '100%', height: 'auto', objectFit: 'cover' }
     case 'BUTTON':

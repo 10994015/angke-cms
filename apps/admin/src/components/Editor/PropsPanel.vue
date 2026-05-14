@@ -327,6 +327,48 @@
             <label class="prop-label">文字內容</label>
             <RichEditor :model-value="v('text') || ''" @update:model-value="up('text', $event)" />
           </div>
+          <div class="prop-group">
+            <label class="prop-label">背景色</label>
+            <div class="color-row">
+              <input type="color" class="color-input" :value="v('bgColor') || '#ffffff'" @input="up('bgColor', $event.target.value)" />
+              <input type="text" class="prop-input" :value="v('bgColor') || ''" @input="up('bgColor', $event.target.value)" placeholder="transparent / #ffffff" />
+              <button v-if="v('bgColor')" class="clear-btn" @click="up('bgColor', '')">✕</button>
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">內距（px）</label>
+            <input type="number" class="prop-input" min="0"
+              :value="v('padding') ?? 0" @input="up('padding', +$event.target.value)" />
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">邊框</label>
+            <div class="unit-row" style="margin-bottom:6px">
+              <input type="number" class="prop-input unit-num" min="0" style="width:72px"
+                :value="v('borderWidth') ?? 0" @input="up('borderWidth', +$event.target.value)" />
+              <span class="unit-suffix">px</span>
+              <input type="color" class="color-input" style="margin-left:6px"
+                :value="v('borderColor') || '#e5e7eb'" @input="up('borderColor', $event.target.value)" />
+            </div>
+            <div class="btn-group">
+              <button class="toggle-btn" :class="{ active: (v('borderStyle') || 'solid') === 'solid' }" @click="up('borderStyle', 'solid')">實線</button>
+              <button class="toggle-btn" :class="{ active: v('borderStyle') === 'dashed' }" @click="up('borderStyle', 'dashed')">虛線</button>
+              <button class="toggle-btn" :class="{ active: v('borderStyle') === 'dotted' }" @click="up('borderStyle', 'dotted')">點線</button>
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">圓角（px）</label>
+            <div class="unit-row">
+              <input type="number" class="prop-input unit-num" min="0"
+                :value="v('borderRadius') ?? 0" @input="up('borderRadius', +$event.target.value)" />
+              <span class="unit-suffix">px</span>
+            </div>
+            <div class="btn-group" style="margin-top:5px">
+              <button class="toggle-btn" :class="{ active: (v('borderRadius') ?? 0) === 0 }" @click="up('borderRadius', 0)">直角</button>
+              <button class="toggle-btn" :class="{ active: (v('borderRadius') ?? 0) === 8 }" @click="up('borderRadius', 8)">小</button>
+              <button class="toggle-btn" :class="{ active: (v('borderRadius') ?? 0) === 16 }" @click="up('borderRadius', 16)">中</button>
+              <button class="toggle-btn" :class="{ active: (v('borderRadius') ?? 0) === 999 }" @click="up('borderRadius', 999)">全圓</button>
+            </div>
+          </div>
         </template>
 
         <!-- IMG -->

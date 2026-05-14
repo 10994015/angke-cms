@@ -212,7 +212,7 @@ const reorderedWithIndex = computed(() => {
 })
 
 const frameContainerStyle = computed(() => ({
-  maxWidth: props.frame.metadata?.frameWidth || '1200px',
+  maxWidth: props.frame.metadata?.frameWidth || '1280px',
   margin: '0 auto',
   width: '100%',
 }))
