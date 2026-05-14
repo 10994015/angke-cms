@@ -246,6 +246,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       }
       isTemplateMode.value = false
       clearSelection()
+      await fetchPageTree(tid)
       return true
     } catch (err) { error.value = err.message; return false } finally { isSaving.value = false }
   }
@@ -270,9 +271,12 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
   const reloadCurrentPage = async (newLocale) => {
     const slug = currentPageSlug.value
     if (!slug) return
+    isLoading.value = true
     currentLocale.value = newLocale
     clearSelection()
     pageData.value = {}
+    // 重新抓新語系的 page tree，navbar 才能跟著更新
+    await fetchPageTree(tenantId.value, newLocale)
     await loadPageContent(slug)
   }
 
@@ -594,7 +598,10 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         `/backend/web-site/${tenantId.value}/page/${slug}`,
         { locale: currentLocale.value || 'ZH-TW', ...data }
       )
-      if (res.data.statusCode === 200) return true
+      if (res.data.statusCode === 200) {
+        await fetchPageTree(tenantId.value)
+        return true
+      }
       error.value = res.data.message
     } catch (err) { error.value = err.message }
     return false

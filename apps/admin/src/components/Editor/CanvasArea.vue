@@ -11,7 +11,7 @@
 
       <!-- 空畫布提示 -->
       <div
-        v-if="!store.currentPageBasemaps.length"
+        v-if="!store.currentPageBasemaps.length && !store.isLoading"
         class="empty-canvas"
         :class="{ 'drag-over': isEmptyDragOver }"
         @dragover.prevent="isEmptyDragOver = true; $event.dataTransfer.dropEffect = 'copy'"

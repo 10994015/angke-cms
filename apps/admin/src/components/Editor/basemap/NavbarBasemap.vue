@@ -202,7 +202,10 @@ const populateFromTree = (nodes) => {
   }
 }
 
-watch(() => store.pageTree, (tree) => populateFromTree(tree), { immediate: true, deep: true })
+watch(() => store.pageTree, (tree) => {
+  childrenCache.value = {}  // 語系切換時清除舊快取
+  populateFromTree(tree)
+}, { immediate: true, deep: true })
 
 const getChildren = (slug) => childrenCache.value[slug] ?? []
 const hasChildren  = (slug) => (childrenCache.value[slug]?.length ?? 0) > 0
@@ -278,6 +281,10 @@ const tabs = computed(() =>
 const enrichedTabs = computed(() =>
   tabs.value.map(tab => ({ ...tab, children: getChildren(tab.slug) }))
 )
+
+watch(tabs, (val) => {
+  console.log('[Navbar] locale =', store.currentLocale, ', tabs =', JSON.parse(JSON.stringify(val)))
+})
 
 // ── Desktop nav hover ──────────────────────────────────────────────────────
 

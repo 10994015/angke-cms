@@ -4,9 +4,9 @@
     :class="[`layout-${frameLayout}`, { 'is-selected': isFrameSelected, 'is-dragging': isDragging }]"
     @click.stop="store.selectFrame(frame)"
   >
-    <!-- 刪除版面配置按鈕（無元件時顯示） -->
+    <!-- 刪除版面配置按鈕 -->
     <button
-      v-if="isFrameSelected && !hasAnyElement"
+      v-if="isFrameSelected"
       class="delete-frame-btn"
       @click.stop="handleDeleteFrame"
       title="刪除此版面配置"
@@ -162,7 +162,12 @@ const displayElements = computed(() => {
 
 const hasAnyElement = computed(() => displayElements.value.some(el => el && el.type))
 
-const isFrameSelected   = computed(() => store.selected.frame === props.frame)
+const isFrameSelected = computed(() => {
+  if (store.selected.frame === props.frame) return true
+  if (store.selected.cell?.frame === props.frame) return true
+  if (store.selected.element) return displayElements.value.some(el => el === store.selected.element)
+  return false
+})
 const isMobile          = computed(() => store.currentDevice === 'mobile')
 const isTablet          = computed(() => store.currentDevice === 'tablet')
 
@@ -321,7 +326,10 @@ const handleDrop = (event, index) => {
 }
 
 const handleDeleteFrame = () => {
-  if (!confirm('確定要刪除此版面配置嗎？')) return
+  const msg = hasAnyElement.value
+    ? '此版面配置內有元件，刪除後無法復原，確定要刪除嗎？'
+    : '確定要刪除此版面配置嗎？'
+  if (!confirm(msg)) return
   store.deleteFrame(props.basemap, props.frameIndex)
 }
 </script>

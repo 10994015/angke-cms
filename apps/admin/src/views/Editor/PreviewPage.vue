@@ -158,8 +158,8 @@ onUnmounted(() => {
   align-items: center;
   padding: 0 24px;
   height: 52px;
-  background: #1a1a1a;
-  border-bottom: 1px solid #2e2e2e;
+  background: #0891B2;
+  border-bottom: 1px solid #0E7490;
   flex-shrink: 0;
 }
 .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 10px; flex: 1; }
@@ -169,24 +169,24 @@ onUnmounted(() => {
 .btn-close {
   display: flex; align-items: center; gap: 6px;
   padding: 6px 14px; background: transparent;
-  border: 1px solid #3a3a3a; border-radius: 6px;
-  color: #aaa; font-size: 13px; cursor: pointer; transition: all 0.15s;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;
+  color: rgba(255,255,255,0.8); font-size: 13px; cursor: pointer; transition: all 0.15s;
 }
-.btn-close:hover { background: #2a2a2a; border-color: #555; color: #fff; }
+.btn-close:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.5); color: #fff; }
 
-.device-switcher { display: flex; align-items: center; background: #2a2a2a; border-radius: 10px; padding: 4px; gap: 2px; border: 1px solid #3a3a3a; }
-.device-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border: none; border-radius: 7px; background: transparent; color: #888; cursor: pointer; transition: all 0.15s; }
-.device-btn:hover { color: #ccc; background: rgba(255,255,255,0.08); }
-.device-btn.active { background: #3a3a3a; color: #4ade80; }
+.device-switcher { display: flex; align-items: center; background: rgba(0,0,0,0.15); border-radius: 10px; padding: 4px; gap: 2px; border: 1px solid rgba(255,255,255,0.15); }
+.device-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border: none; border-radius: 7px; background: transparent; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.15s; }
+.device-btn:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.device-btn.active { background: rgba(255,255,255,0.2); color: #fff; }
 
-.preview-label { font-size: 12px; color: #666; }
+.preview-label { font-size: 12px; color: rgba(255,255,255,0.55); }
 
 /* Locale + Login */
-.locale-switcher { display: flex; align-items: center; gap: 2px; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 8px; padding: 3px; }
-.locale-btn { padding: 4px 10px; border: none; border-radius: 5px; background: transparent; color: #888; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
-.locale-btn:hover { color: #ccc; background: rgba(255,255,255,0.06); }
-.locale-btn.active { background: #3a3a3a; color: #fff; }
-.btn-login { padding: 6px 16px; border: 1px solid #3a3a3a; border-radius: 6px; background: transparent; color: #888; font-size: 13px; cursor: not-allowed; opacity: 0.5; font-family: inherit; white-space: nowrap; }
+.locale-switcher { display: flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 3px; }
+.locale-btn { padding: 4px 10px; border: none; border-radius: 5px; background: transparent; color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
+.locale-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.locale-btn.active { background: rgba(255,255,255,0.2); color: #fff; }
+.btn-login { padding: 6px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; background: transparent; color: rgba(255,255,255,0.5); font-size: 13px; cursor: not-allowed; opacity: 0.6; font-family: inherit; white-space: nowrap; }
 
 /* State overlay */
 .state-overlay { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 14px; color: #6b7280; }
@@ -201,9 +201,9 @@ onUnmounted(() => {
 .preview-area--desktop .device-frame { width: 100%; height: 100%; border-radius: 0; box-shadow: none; border: none; }
 .preview-area--desktop .device-screen { height: 100%; overflow-y: auto; border-radius: 0; }
 
-.device-frame { position: relative; background: #1a1a1a; border-radius: 40px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); overflow: hidden; flex-shrink: 0; }
-.device-frame--mobile { width: 390px; height: 80vh; max-height: 860px; border: 10px solid #2a2a2a; border-radius: 44px; box-sizing: content-box; }
-.device-frame--tablet { width: 768px; height: 80vh; max-height: 1080px; border: 12px solid #2a2a2a; border-radius: 20px; box-sizing: content-box; }
+.device-frame { position: relative; background: #0E7490; border-radius: 40px; box-shadow: 0 30px 80px rgba(8,145,178,0.35); overflow: hidden; flex-shrink: 0; }
+.device-frame--mobile { width: 390px; height: 80vh; max-height: 860px; border: 10px solid #0E7490; border-radius: 44px; box-sizing: content-box; }
+.device-frame--tablet { width: 768px; height: 80vh; max-height: 1080px; border: 12px solid #0E7490; border-radius: 20px; box-sizing: content-box; }
 
 .device-screen { background: #fff; border-radius: 34px; overflow-y: auto; overflow-x: hidden; height: 100%; width: 100%; position: relative; }
 .device-frame--tablet .device-screen { border-radius: 10px; }

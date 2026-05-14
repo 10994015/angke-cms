@@ -1,8 +1,7 @@
-﻿<script setup>
+<script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { GoogleSignInButton } from 'vue3-google-signin'
 
 const router = useRouter()
 const route = useRoute()
@@ -10,9 +9,7 @@ const authStore = useAuthStore()
 
 const loginForm = ref({ credential: '', password: '' })
 const isLoading = ref(false)
-const isGoogleLoading = ref(false)
 const errorMsg = ref('')
-const googleSignInButton = ref(null)
 
 const getRedirectTarget = () => {
   const redirect = route.query.redirect
@@ -29,12 +26,8 @@ const getRedirectTarget = () => {
 
 const afterLogin = () => {
   const target = getRedirectTarget()
-  // Always use router.push to avoid a full-page browser reload.
-  // window.location.href resets isInitialized, forcing checkAuth to re-fetch
-  // the user on every guard, which causes the "refresh" on the next page.
   try {
     const url = new URL(target)
-    // Reject absolute URLs pointing to other origins
     if (url.origin !== window.location.origin) {
       router.push('/dashboard')
       return
@@ -43,39 +36,6 @@ const afterLogin = () => {
     // Relative path — safe to push directly
   }
   router.push(target)
-}
-
-const triggerGoogleLogin = () => {
-  if (isGoogleLoading.value || isLoading.value) return
-  const googleBtn = googleSignInButton.value?.$el?.querySelector('div[role="button"]')
-  googleBtn?.click()
-}
-
-const handleGoogleSuccess = async (response) => {
-  isGoogleLoading.value = true
-  errorMsg.value = ''
-  try {
-    const result = await authStore.googleLogin(response.credential)
-    if (result.success) {
-      if (result.statusCode === 202) {
-        alert(result.data.firstLogin ? '首次登入需重設密碼！' : '密碼已過期，請重新設定密碼！')
-        router.push(`/init-password/${result.data.changePwToken}`)
-        return
-      }
-      afterLogin()
-    } else {
-      errorMsg.value = result.error || 'Google 登入失敗，請稍後再試'
-    }
-  } catch {
-    errorMsg.value = 'Google 登入失敗，請稍後再試'
-  } finally {
-    isGoogleLoading.value = false
-  }
-}
-
-const handleGoogleError = () => {
-  errorMsg.value = 'Google 登入失敗，請稍後再試'
-  isGoogleLoading.value = false
 }
 
 const handleLogin = async () => {
@@ -129,31 +89,6 @@ const handleLogin = async () => {
           <p class="form-subtitle">輸入您的帳號與密碼以繼續</p>
         </div>
 
-        <!-- Google login -->
-        <button
-          class="btn-google"
-          @click="triggerGoogleLogin"
-          :disabled="isGoogleLoading || isLoading"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          {{ isGoogleLoading ? '登入中...' : '使用 Google 帳號登入' }}
-        </button>
-
-        <div style="display: none">
-          <GoogleSignInButton
-            ref="googleSignInButton"
-            @success="handleGoogleSuccess"
-            @error="handleGoogleError"
-          />
-        </div>
-
-        <div class="divider"><span>或使用帳號密碼</span></div>
-
         <!-- Form -->
         <div class="form-field">
           <label class="form-label">帳號</label>
@@ -192,7 +127,7 @@ const handleLogin = async () => {
         <button
           class="btn-login"
           @click="handleLogin"
-          :disabled="isLoading || isGoogleLoading"
+          :disabled="isLoading"
         >
           <svg v-if="isLoading" class="spinner" viewBox="0 0 24 24" fill="none" width="16" height="16">
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="40" stroke-dashoffset="15"/>
@@ -305,52 +240,6 @@ const handleLogin = async () => {
   margin: 0;
 }
 
-/* ===== Google Button ===== */
-.btn-google {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover:not(:disabled) {
-    background: #f9fafb;
-    border-color: #d1d5db;
-  }
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-/* ===== Divider ===== */
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-  color: #9ca3af;
-  font-size: 12px;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e5e7eb;
-  }
-}
-
 /* ===== Form ===== */
 .form-field {
   display: flex;
@@ -437,7 +326,7 @@ const handleLogin = async () => {
   margin-top: 6px;
 
   &:hover:not(:disabled) {
-    background: #d04a20;
+    background: #0E7490;
   }
   &:disabled {
     opacity: 0.6;

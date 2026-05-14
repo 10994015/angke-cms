@@ -143,44 +143,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const googleLogin = async (credential) => {
-    try {
-      const response = await axiosClient.post('/login/google', { token: credential })
-
-      if (response.status === 202) {
-        return { success: true, data: response.data.data, statusCode: response.status }
-      }
-
-      if (response.status === 200) {
-        const data = response.data.data
-        user.value = { userId: data.userId, name: data.name }
-        systemPermissions.value = data.systemPermissions || []
-        templeRoles.value = data.tenantRoles || []
-        hasDesignerPermission.value = !!data.hasDesignerPermission
-        isInitialized.value = true
-        resetHandling401()
-        return { success: true, statusCode: response.status, data }
-      }
-    } catch (error) {
-      if (error.response) {
-        const statusCode = error.response.status
-        const message = error.response.data?.message
-        switch (statusCode) {
-          case 401:
-            return { success: false, error: message || 'Google 登入驗證失敗', statusCode }
-          case 407:
-            return { success: false, error: message || '帳號未審核', statusCode }
-          default:
-            return { success: false, error: message || `伺服器錯誤 (${statusCode})`, statusCode }
-        }
-      } else if (error.request) {
-        return { success: false, error: '網路連線錯誤，請檢查網路狀態', statusCode: 500 }
-      } else {
-        return { success: false, error: error.message || '未知錯誤', statusCode: 500 }
-      }
-    }
-  }
-
   const fetchUserPermissions = async () => {
     try {
       const response = await axiosClient.get('/frontend/user/permission')
@@ -340,7 +302,6 @@ export const useAuthStore = defineStore('auth', () => {
     canModify,
 
     login,
-    googleLogin,
     logout,
     checkAuth,
     fetchUser,
