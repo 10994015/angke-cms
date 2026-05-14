@@ -74,7 +74,11 @@
                     :frame-data="frame.data || {}"
                     :current-page-slug="store.currentSlug"
                     :device="device"
+                    :locales="store.locales"
+                    :current-locale="store.currentLocale"
+                    :page-tabs="pageTabs"
                     @change-page="store.loadPage($event)"
+                    @change-locale="store.switchLocale($event)"
                   />
                   <CustomFramePreview
                     v-else
@@ -101,7 +105,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePreviewStore } from '@/stores/preview'
 import SystemFramePreview from '@/components/Preview/SystemFramePreview.vue'
@@ -116,6 +120,18 @@ const showTop   = ref(false)
 
 // ── 判斷系統 vs 版面配置 ──
 const isSystemFrame = (frame) => frame?.type && !frame.type.startsWith('FRAME')
+
+// ── 從 header basemap 取得 tabs，供 footer navColumns 用 ──
+const HEADER_TYPES = new Set(['HEADER', 'PV_HEADER'])
+const pageTabs = computed(() => {
+  for (const bm of store.basemaps) {
+    if (HEADER_TYPES.has(bm?.bgType) || HEADER_TYPES.has(bm?.frames?.[0]?.type)) {
+      const tabs = bm.frames?.[0]?.data?.tabs || bm.frames?.[0]?.data?.tab || []
+      if (tabs.length) return tabs
+    }
+  }
+  return []
+})
 
 // ── Basemap 背景樣式 ──
 const getBasemapStyle = (basemap) => {

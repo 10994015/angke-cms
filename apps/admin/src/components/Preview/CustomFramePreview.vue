@@ -111,14 +111,17 @@ const doubleRowSplit = computed(() => {
 })
 
 const compositeInfo = computed(() => {
-  const els = displayElements.value
-  const map = {
-    A: { leftCells: [0],       rightCells: [1, 2],    leftWidth: els[0]?.width || '66.7%' },
-    B: { leftCells: [0, 1],    rightCells: [2],       leftWidth: '33.3%' },
-    C: { leftCells: [0],       rightCells: [1, 2, 3], leftWidth: '66.7%' },
-    D: { leftCells: [0, 1, 2], rightCells: [3],       leftWidth: '33.3%' },
+  const defaults = {
+    A: { leftCells: [0],       rightCells: [1, 2],    defaultLeft: 67 },
+    B: { leftCells: [0, 1],    rightCells: [2],       defaultLeft: 33 },
+    C: { leftCells: [0],       rightCells: [1, 2, 3], defaultLeft: 67 },
+    D: { leftCells: [0, 1, 2], rightCells: [3],       defaultLeft: 25 },
   }
-  return map[frameLayout.value] || null
+  const info = defaults[frameLayout.value]
+  if (!info) return null
+  const stored = props.frame.data?.columnWidths
+  const leftPct = (Array.isArray(stored) && stored.length === 2) ? stored[0] : info.defaultLeft
+  return { ...info, leftWidth: `${leftPct}%` }
 })
 
 const mobileReorderedElements = computed(() => {
@@ -136,7 +139,7 @@ const mobileReorderedElements = computed(() => {
 })
 
 const frameContainerStyle = computed(() => ({
-  maxWidth: props.frame.metadata?.frameWidth || '1200px',
+  maxWidth: props.frame.metadata?.frameWidth || '1280px',
   margin: '0 auto',
   width: '100%',
 }))
@@ -148,8 +151,11 @@ const gridStyle = computed(() => {
   if (isTablet.value && isSingleRowMulti.value)
     return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }
   if (['1_1', '1_2', '1_3', '1_4'].includes(layout)) {
-    const widths = displayElements.value.map(el => el?.width || '1fr')
-    return { display: 'grid', gridTemplateColumns: widths.join(' ') }
+    const colWidths = props.frame.data?.columnWidths
+    if (Array.isArray(colWidths) && colWidths.length === cellCount.value) {
+      return { display: 'grid', gridTemplateColumns: colWidths.map(w => `${w}%`).join(' ') }
+    }
+    return { display: 'grid', gridTemplateColumns: `repeat(${cellCount.value}, 1fr)` }
   }
   const gridMap = {
     '2_2': 'repeat(2, 1fr)',

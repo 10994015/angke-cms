@@ -245,8 +245,8 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
         }
       }
       isTemplateMode.value = false
-      clearSelection()
       await fetchPageTree(tid)
+      await loadPageContent(currentPageSlug.value)
       return true
     } catch (err) { error.value = err.message; return false } finally { isSaving.value = false }
   }
