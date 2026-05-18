@@ -30,6 +30,7 @@
           >
             <FrameElementRenderer
               :element="element" :cell-index="index" :is-drag-over="dragOverCell === index"
+              :is-edit-mode="true"
               @delete="store.deleteElementFromCell(frame, index)"
             />
           </div>
@@ -48,6 +49,7 @@
           >
             <FrameElementRenderer
               :element="element" :cell-index="doubleLayoutCols + rIndex" :is-drag-over="dragOverCell === (doubleLayoutCols + rIndex)"
+              :is-edit-mode="true"
               @delete="store.deleteElementFromCell(frame, doubleLayoutCols + rIndex)"
             />
           </div>
@@ -71,6 +73,7 @@
             >
               <FrameElementRenderer
                 :element="displayElements[idx]" :cell-index="idx" :is-drag-over="dragOverCell === idx"
+                :is-edit-mode="true"
                 @delete="store.deleteElementFromCell(frame, idx)"
               />
             </div>
@@ -89,6 +92,7 @@
             >
               <FrameElementRenderer
                 :element="displayElements[idx]" :cell-index="idx" :is-drag-over="dragOverCell === idx"
+                :is-edit-mode="true"
                 @delete="store.deleteElementFromCell(frame, idx)"
               />
             </div>
@@ -111,6 +115,7 @@
         >
           <FrameElementRenderer
             :element="element" :cell-index="origIndex" :is-drag-over="dragOverCell === origIndex"
+            :is-edit-mode="true"
             @delete="store.deleteElementFromCell(frame, origIndex)"
           />
         </div>

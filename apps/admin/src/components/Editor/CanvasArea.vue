@@ -83,6 +83,7 @@
                       :frame="frame"
                       :is-selected="store.selected.frame === frame"
                       @select-frame="store.selectFrame"
+                      @delete-frame="store.deleteFrame(basemap, fIdx)"
                     />
                     <CustomFrame
                       v-else
