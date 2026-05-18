@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -13,31 +13,36 @@ const authStore = useAuthStore()
 
 const collapsed = ref(false)
 
-const navGroups = [
-  {
-    title: '內容管理',
-    items: [
-      { label: '網站管理', path: '/websites', icon: 'globe' },
-    ],
-  },
-  {
-    title: '會員管理',
-    items: [
-      { label: '帳號管理', path: '/users', icon: 'users' },
-      { label: '角色權限', path: '/roles', icon: 'shield' },
-    ],
-  },
-  {
-    title: '通訊',
-    items: [{ label: '寄信管理', path: '/mail', icon: 'mail' }],
-  },
-  {
-    title: '系統',
-    items: [
-      { label: '系統日誌', path: '/logs', icon: 'log' },
-    ],
-  },
-]
+onMounted(() => {
+  console.log(
+    '[AdminLayout] systemPermissions:',
+    JSON.parse(JSON.stringify(authStore.systemPermissions))
+  )
+})
+
+const PERMISSION_MAP = {
+  '網站管理':    { path: '/websites', icon: 'globe',  group: '內容管理' },
+  '帳號管理':    { path: '/users',    icon: 'users',  group: '會員管理' },
+  '權限角色管理': { path: '/roles',    icon: 'shield', group: '會員管理' },
+  '信件管理':    { path: '/mail',     icon: 'mail',   group: '通訊'   },
+  '系統日誌查詢': { path: '/logs',     icon: 'log',    group: '系統'   },
+}
+
+const GROUP_ORDER = ['內容管理', '會員管理', '通訊', '系統']
+
+const navGroups = computed(() => {
+  const permissions = authStore.systemPermissions || []
+  const grouped = {}
+  for (const perm of permissions) {
+    const mapping = PERMISSION_MAP[perm.permissionName]
+    if (!mapping) continue
+    if (!grouped[mapping.group]) grouped[mapping.group] = []
+    grouped[mapping.group].push({ label: perm.permissionName, path: mapping.path, icon: mapping.icon })
+  }
+  return GROUP_ORDER
+    .filter(g => grouped[g]?.length)
+    .map(g => ({ title: g, items: grouped[g] }))
+})
 
 const isActive = (path) => route.path === path || route.path.startsWith(path + '/')
 

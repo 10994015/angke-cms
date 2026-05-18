@@ -137,8 +137,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { usePageEditorStore } from '@/stores/pageEditor'
+import { useAuthStore } from '@/stores/auth'
 
-const store = usePageEditorStore()
+const store     = usePageEditorStore()
+const authStore = useAuthStore()
+
 const activeTab = ref('system-frames')
 const pinned    = ref(false)
 const hovered   = ref(false)
@@ -153,6 +156,11 @@ onMounted(async () => {
     await store.fetchAvailableSystemFrames()
     isLoadingSystemFrames.value = false
   }
+
+  console.log(
+    '[LeftSidebar] systemPermissions:',
+    JSON.parse(JSON.stringify(authStore.systemPermissions))
+  )
 })
 
 const BASIC_ELEMENTS = [
