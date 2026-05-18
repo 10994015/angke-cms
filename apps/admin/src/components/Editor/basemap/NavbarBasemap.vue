@@ -11,12 +11,7 @@
       >
         <div class="pv-logo">
           <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="pv-logo-image" />
-          <span v-else class="pv-logo-icon">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="6" fill="#0891B2"/>
-              <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
-            </svg>
-          </span>
+          <span v-else class="pv-logo-placeholder">請上傳 Logo</span>
         </div>
         <div v-if="props.frame" class="pv-logo-edit-hint">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -247,7 +242,7 @@ provide('navDropdownState', {
 
 // ── Logo ───────────────────────────────────────────────────────────────────
 
-const logoSrc      = computed(() => props.frameData.logoImgSrc || '/images/logo.png')
+const logoSrc      = computed(() => props.frameData.logoImgSrc || null)
 const isLogoSelected = computed(() => !!props.frame && store.selected.frame === props.frame)
 
 const handleLogoClick = () => {
@@ -522,6 +517,15 @@ onUnmounted(() => {
 }
 
 .pv-logo-icon { flex-shrink: 0; display: flex; align-items: center; }
+
+.pv-logo-placeholder {
+  font-size: 12px;
+  color: #9ca3af;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 6px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
 
 // ── 桌機導航 ──
 .pv-nav-menu {

@@ -10,6 +10,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@angke/ui": "workspace:*",
     "@tiptap/core": "^3.23.1",
     "@tiptap/extension-color": "^3.23.1",
     "@tiptap/extension-link": "^3.23.1",

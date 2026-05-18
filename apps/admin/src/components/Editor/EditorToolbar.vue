@@ -54,11 +54,20 @@
         {{ store.isSaving ? '儲存中...' : '儲存草稿' }}
       </button>
       <button class="btn btn-primary" @click="$emit('publish')">發布</button>
+      <a class="btn btn-visit" :href="siteUrl" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        前往網站
+      </a>
     </div>
   </header>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { usePageEditorStore } from '@/stores/pageEditor'
 import { useRouter } from 'vue-router'
 
@@ -68,6 +77,12 @@ const router = useRouter()
 defineEmits(['preview', 'save', 'publish', 'page-settings'])
 
 const onLocaleChange = (e) => store.reloadCurrentPage(e.target.value)
+
+const siteUrl = computed(() => {
+  const locale = (store.currentLocale || 'zh-tw').toLowerCase()
+  const slug   = store.currentPageSlug || 'home'
+  return `http://localhost:3000/${locale}/${slug}`
+})
 
 const handleBack = () => {
   if (store.hasUnsavedChanges && !confirm('確定要返回後台嗎？未儲存的變更將會遺失。')) return
@@ -172,6 +187,15 @@ const handleBack = () => {
   font-weight: 600;
   letter-spacing: 0.01em;
   &:hover:not(:disabled) { background: #0E7490; border-color: #0E7490; color: #fff; }
+}
+
+.btn-visit {
+  border-color: #d1fae5;
+  background: #f0fdf4;
+  color: #059669;
+  font-weight: 500;
+  text-decoration: none;
+  &:hover { background: #d1fae5; border-color: #6ee7b7; color: #047857; }
 }
 
 // ── Device toggle ──

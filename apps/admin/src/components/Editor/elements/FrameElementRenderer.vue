@@ -15,6 +15,7 @@
         v-if="currentComponent"
         :val="val"
         :meta="meta"
+        v-bind="extraProps"
       />
 
       <!-- 未知類型 fallback -->
@@ -27,14 +28,14 @@
 
 <script setup>
 import { computed } from 'vue'
-import TextElement     from './TextElement.vue'
-import ImageElement    from './ImageElement.vue'
-import ButtonElement   from './ButtonElement.vue'
-import CarouselElement from './CarouselElement.vue'
-import MapElement      from './MapElement.vue'
-import AccordionElement from './AccordionElement.vue'
-import IframeElement   from './IframeElement.vue'
-import HlineElement    from './HlineElement.vue'
+import TextElement      from '@angke/ui/components/elements/TextElement.vue'
+import ImageElement     from '@angke/ui/components/elements/ImageElement.vue'
+import ButtonElement    from '@angke/ui/components/elements/ButtonElement.vue'
+import CarouselElement  from '@angke/ui/components/elements/CarouselElement.vue'
+import MapElement       from '@angke/ui/components/elements/MapElement.vue'
+import AccordionElement from '@angke/ui/components/elements/AccordionElement.vue'
+import IframeElement    from '@angke/ui/components/elements/IframeElement.vue'
+import HlineElement     from '@angke/ui/components/elements/HlineElement.vue'
 
 const ELEMENT_MAP = {
   TEXT:         TextElement,
@@ -62,6 +63,7 @@ const type            = computed(() => props.element?.type)
 const val             = computed(() => props.element?.value    || {})
 const meta            = computed(() => props.element?.metadata || {})
 const currentComponent = computed(() => ELEMENT_MAP[type.value] ?? null)
+const extraProps       = computed(() => type.value === 'IMG' ? { editorHint: true } : {})
 </script>
 
 <style scoped lang="scss">

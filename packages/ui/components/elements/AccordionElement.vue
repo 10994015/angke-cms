@@ -36,16 +36,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
-import { ensureUnit } from '@/utils/ensureUnit'
+import { ensureUnit } from '../../utils/ensureUnit.js'
 
-const props = defineProps({
-  val:  { type: Object, default: () => ({}) },
-  meta: { type: Object, default: () => ({}) },
-})
+const props = defineProps<{ val: Record<string, any>; meta?: Record<string, any> }>()
 
-const openSet = ref(new Set())
+const openSet = ref(new Set<number>())
 
 const initOpen = () => {
   openSet.value = props.val.defaultOpen ? new Set([0]) : new Set()
@@ -54,7 +51,7 @@ const initOpen = () => {
 initOpen()
 watch(() => props.val.defaultOpen, initOpen)
 
-const toggle = (i) => {
+const toggle = (i: number) => {
   const s = new Set(openSet.value)
   if (s.has(i)) s.delete(i)
   else s.add(i)
@@ -62,22 +59,17 @@ const toggle = (i) => {
 }
 </script>
 
-<style scoped lang="scss">
-.el-accordion {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+<style scoped>
+.el-accordion { width: 100%; display: flex; flex-direction: column; gap: 6px; }
 
 .el-accordion-item {
   border: 1px solid #e8e8e8;
   border-radius: 10px;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   overflow: hidden;
-  &.is-open { border-color: #0891B2; box-shadow: 0 3px 12px rgba(8, 145, 178, 0.12); }
 }
+.el-accordion-item.is-open { border-color: #0891B2; box-shadow: 0 3px 12px rgba(8,145,178,0.12); }
 
 .el-accordion-header {
   display: flex;
@@ -88,9 +80,8 @@ const toggle = (i) => {
   cursor: pointer;
   user-select: none;
   transition: color 0.2s;
-
-  &:hover { opacity: 0.85; }
 }
+.el-accordion-header:hover { opacity: 0.85; }
 
 .el-accordion-title { flex: 1; line-height: 1.5; }
 
@@ -101,19 +92,12 @@ const toggle = (i) => {
   overflow: hidden;
 }
 
-// 展開動畫
 .accordion-enter-active,
 .accordion-leave-active {
   transition: max-height 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
   max-height: 600px;
   overflow: hidden;
 }
-
 .accordion-enter-from,
-.accordion-leave-to {
-  max-height: 0;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
+.accordion-leave-to { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
 </style>
