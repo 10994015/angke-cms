@@ -98,6 +98,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
   frameData:     Record<string, any>
+  basemapBg?:    { desktop?: string | null; tablet?: string | null; mobile?: string | null }
   currentLocale: string
   locales:       { locale: string; label: string; urlCode: string }[]
   tabs:          { slug: string; name: string }[]
@@ -119,10 +120,21 @@ onUnmounted(() => { window.removeEventListener('resize', updateMobile) })
 
 const logoSrc = computed(() => props.frameData.logoImgUrl || props.frameData.logoImgSrc || null)
 
-const navbarBgStyle = computed(() => ({
-  backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || '#ffffff',
-  color: props.frameData.navTextColor || props.frameData.textColor || '#333333',
-}))
+const navbarBgStyle = computed(() => {
+  const bgImg = isMobile.value
+    ? (props.basemapBg?.mobile || props.basemapBg?.tablet || props.basemapBg?.desktop)
+    : (props.basemapBg?.desktop)
+
+  return {
+    backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || '#ffffff',
+    color: props.frameData.navTextColor || props.frameData.textColor || '#333333',
+    ...(bgImg ? {
+      backgroundImage: `url(${bgImg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    } : {}),
+  }
+})
 
 const currentLocaleLabel = computed(() => {
   const found = props.locales.find(l => l.urlCode === props.currentLocale)

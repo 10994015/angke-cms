@@ -172,6 +172,7 @@ onMounted(async () => {
     await Promise.all([
       store.fetchLocales(templeId),
       store.fetchAvailableSystemFrames(),
+      store.fetchWebsiteSettings(templeId),
     ])
     await store.fetchPageTree(templeId)
     await store.loadPageContent(initSlug)

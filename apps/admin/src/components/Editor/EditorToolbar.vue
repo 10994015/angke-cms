@@ -81,7 +81,8 @@ const onLocaleChange = (e) => store.reloadCurrentPage(e.target.value)
 const siteUrl = computed(() => {
   const locale = (store.currentLocale || 'zh-tw').toLowerCase()
   const slug   = store.currentPageSlug || 'home'
-  return `http://localhost:3000/${locale}/${slug}`
+  const base   = store.websiteSettings?.domainName?.replace(/\/$/, '') || 'http://localhost:3000'
+  return `${base}/${locale}/${slug}`
 })
 
 const handleBack = () => {

@@ -20,6 +20,11 @@
             <SiteNavbar
               v-if="isHeaderFrame(frame)"
               :frame-data="frame.data || {}"
+              :basemap-bg="{
+                desktop: basemap.bgPcImgSrc    || null,
+                tablet:  basemap.bgTabletImgSrc || null,
+                mobile:  basemap.bgPhoneImgSrc  || null,
+              }"
               :current-locale="locale"
               :locales="locales"
               :tabs="visibleTabs"

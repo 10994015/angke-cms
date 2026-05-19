@@ -37,11 +37,13 @@ const creating      = ref(false)
 const deletingSlug = ref(null)
 
 // ── 移動：共用的 API 呼叫 ──
-const performMove = async (slug, parentId) => {
+const performMove = async (slug, parentId, sequence = undefined) => {
   try {
+    const body = { parentId: parentId || null }
+    if (sequence !== undefined) body.sequence = sequence
     const res = await axiosClient.patch(
       `/backend/web-site/${siteId}/page/${slug}/move`,
-      { parentId: parentId || null }
+      body
     )
     if (res.data.statusCode === 200) { await fetchPages(); return true }
     alert(res.data.message || '移動失敗')
@@ -50,6 +52,7 @@ const performMove = async (slug, parentId) => {
   }
   return false
 }
+
 
 // ── 拖曳狀態 (provide 給 PageTreeNode) ──
 const draggedNode   = ref(null)
@@ -61,6 +64,12 @@ provide('treeDrag', {
     const slug = draggedSlug ?? draggedNode.value?.slug
     if (!slug || slug === targetNode.slug) return
     performMove(slug, targetNode.pageId || null)
+    draggedNode.value = null
+  },
+  onReorderDrop: (draggedSlug, parentId, sequence) => {
+    const slug = draggedSlug ?? draggedNode.value?.slug
+    if (!slug) return
+    performMove(slug, parentId, sequence)
     draggedNode.value = null
   },
 })
@@ -143,11 +152,12 @@ const handleInfoSave = async () => {
 }
 
 // ── 移動 Modal (保留精確選擇) ──
-const moveVisible  = ref(false)
-const moveNode     = ref(null)
-const moveParentId = ref('')
-const moveError    = ref('')
-const moving       = ref(false)
+const moveVisible   = ref(false)
+const moveNode      = ref(null)
+const moveParentId  = ref('')
+const moveSequence  = ref('')
+const moveError     = ref('')
+const moving        = ref(false)
 
 const fetchPages = async () => {
   loading.value = true
@@ -206,10 +216,11 @@ const handleCopy = async (node) => {
 }
 
 const handleMove = (node) => {
-  moveNode.value     = node
-  moveParentId.value = node.parentId || ''
-  moveError.value    = ''
-  moveVisible.value  = true
+  moveNode.value      = node
+  moveParentId.value  = node.parentId || ''
+  moveSequence.value  = ''
+  moveError.value     = ''
+  moveVisible.value   = true
 }
 
 const closeMove = () => { moveVisible.value = false; moveNode.value = null }
@@ -219,7 +230,8 @@ const submitMove = async () => {
   moving.value    = true
   moveError.value = ''
   try {
-    const ok = await performMove(moveNode.value.slug, moveParentId.value || null)
+    const seq = moveSequence.value !== '' ? parseInt(moveSequence.value) : undefined
+    const ok = await performMove(moveNode.value.slug, moveParentId.value || null, seq)
     if (ok) closeMove()
     else moveError.value = '移動失敗，請重試'
   } catch (err) {
@@ -349,10 +361,12 @@ onMounted(fetchPages)
 
         <div class="tree-body">
           <PageTreeNode
-            v-for="node in pageTree"
+            v-for="(node, idx) in pageTree"
             :key="node.pageId"
             :node="node"
             :depth="0"
+            :siblings="pageTree"
+            :sibling-index="idx"
             @edit="handleEdit"
             @info="openInfo"
             @delete="handleDelete"
@@ -535,6 +549,11 @@ onMounted(fetchPages)
                   </option>
                 </select>
                 <p class="field-hint">不可選擇自己作為上層頁面</p>
+              </div>
+              <div class="field-group">
+                <label class="field-label">排序位置</label>
+                <input v-model="moveSequence" type="number" min="1" class="field-input" placeholder="留空則排在最後" />
+                <p class="field-hint">在目標層級的第幾個位置（從 1 開始），留空自動排在最後</p>
               </div>
               <p v-if="moveError" class="form-error">{{ moveError }}</p>
             </div>

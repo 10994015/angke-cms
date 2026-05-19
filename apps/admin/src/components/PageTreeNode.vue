@@ -1,5 +1,15 @@
 ﻿<template>
   <div class="tree-node" :style="{ paddingLeft: depth * 20 + 'px' }">
+    <!-- Insert-before drop zone -->
+    <div
+      v-if="showInsertBefore"
+      class="insert-zone"
+      :class="{ active: isInsertBeforeOver }"
+      @dragover.prevent.stop="isInsertBeforeOver = true"
+      @dragleave.stop="isInsertBeforeOver = false"
+      @drop.prevent.stop="onInsertBeforeDrop"
+    />
+
     <div
       class="tree-row"
       :class="{ 'is-drag-over': isDragOver, 'is-dragging': isDragging }"
@@ -30,32 +40,32 @@
       <span class="tree-layer">{{ node.layer }}</span>
 
       <div class="tree-actions" @dragstart.stop>
-        <button class="action-btn primary" @click.stop="$emit('edit', node)" title="進入 CMS 編輯器">
+        <button class="action-btn primary" @click.stop="emit('edit', node)" title="進入 CMS 編輯器">
           <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
           </svg>
           編輯
         </button>
-        <button class="action-btn info" @click.stop="$emit('info', node)" title="編輯頁面資料（SEO）">
+        <button class="action-btn info" @click.stop="emit('info', node)" title="編輯頁面資料（SEO）">
           <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
           </svg>
           資訊
         </button>
-        <button class="action-btn" @click.stop="$emit('copy', node)" title="複製頁面">
+        <button class="action-btn" @click.stop="emit('copy', node)" title="複製頁面">
           <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
             <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/>
             <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z"/>
           </svg>
           複製
         </button>
-        <button class="action-btn" @click.stop="$emit('move', node)" title="選擇上層頁面">
+        <button class="action-btn" @click.stop="emit('move', node)" title="選擇上層頁面">
           <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
             <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
           </svg>
           移動
         </button>
-        <button class="action-btn danger" @click.stop="$emit('delete', node)" title="刪除頁面">
+        <button class="action-btn danger" @click.stop="emit('delete', node)" title="刪除頁面">
           <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
             <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
           </svg>
@@ -66,35 +76,89 @@
 
     <template v-if="expanded && node.children?.length">
       <PageTreeNode
-        v-for="child in node.children"
+        v-for="(child, idx) in node.children"
         :key="child.slug"
         :node="child"
         :depth="depth + 1"
-        @edit="$emit('edit', $event)"
-        @info="$emit('info', $event)"
-        @delete="$emit('delete', $event)"
-        @copy="$emit('copy', $event)"
-        @move="$emit('move', $event)"
+        :siblings="node.children"
+        :sibling-index="idx"
+        @edit="emit('edit', $event)"
+        @info="emit('info', $event)"
+        @delete="emit('delete', $event)"
+        @copy="emit('copy', $event)"
+        @move="emit('move', $event)"
       />
     </template>
+
+    <!-- Insert-after drop zone (last sibling only) -->
+    <div
+      v-if="showInsertAfter"
+      class="insert-zone"
+      :class="{ active: isInsertAfterOver }"
+      @dragover.prevent.stop="isInsertAfterOver = true"
+      @dragleave.stop="isInsertAfterOver = false"
+      @drop.prevent.stop="onInsertAfterDrop"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, inject } from 'vue'
 
+
 const props = defineProps({
-  node:  { type: Object, required: true },
-  depth: { type: Number, default: 0 },
+  node:         { type: Object, required: true },
+  depth:        { type: Number, default: 0 },
+  siblings:     { type: Array, default: () => [] },
+  siblingIndex: { type: Number, default: 0 },
 })
 
-defineEmits(['edit', 'info', 'delete', 'copy', 'move'])
+const emit = defineEmits(['edit', 'info', 'delete', 'copy', 'move'])
 
 const expanded = ref(true)
 
 const treeDrag   = inject('treeDrag', null)
 const isDragOver = ref(false)
 const isDragging = computed(() => treeDrag?.draggedNode.value?.slug === props.node.slug)
+
+// ── Insert-zone (reorder by drag) ──
+const isInsertBeforeOver = ref(false)
+const isInsertAfterOver  = ref(false)
+
+const showInsertBefore = computed(() => {
+  const dragged = treeDrag?.draggedNode.value
+  if (!dragged) return false
+  if (dragged.slug === props.node.slug) return false
+  const dIdx = props.siblings.findIndex(s => s.slug === dragged.slug)
+  if (dIdx === -1) return true  // different parent, always show
+  return dIdx !== props.siblingIndex - 1 && dIdx !== props.siblingIndex
+})
+
+const showInsertAfter = computed(() => {
+  if (props.siblingIndex !== props.siblings.length - 1) return false
+  const dragged = treeDrag?.draggedNode.value
+  if (!dragged) return false
+  if (dragged.slug === props.node.slug) return false
+  const dIdx = props.siblings.findIndex(s => s.slug === dragged.slug)
+  if (dIdx === -1) return true
+  return dIdx !== props.siblings.length - 1
+})
+
+const onInsertBeforeDrop = (e) => {
+  isInsertBeforeOver.value = false
+  if (!treeDrag?.onReorderDrop) return
+  const slug = e.dataTransfer.getData('text/plain') || treeDrag.draggedNode.value?.slug
+  if (!slug) return
+  treeDrag.onReorderDrop(slug, props.node.parentId ?? null, props.siblingIndex + 1)
+}
+
+const onInsertAfterDrop = (e) => {
+  isInsertAfterOver.value = false
+  if (!treeDrag?.onReorderDrop) return
+  const slug = e.dataTransfer.getData('text/plain') || treeDrag.draggedNode.value?.slug
+  if (!slug) return
+  treeDrag.onReorderDrop(slug, props.node.parentId ?? null, props.siblings.length + 1)
+}
 
 const onDragStart = (e) => {
   if (!treeDrag) return
@@ -133,6 +197,31 @@ const onDrop = (e) => {
 
 <style scoped lang="scss">
 .tree-node { display: flex; flex-direction: column; }
+
+.insert-zone {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  cursor: copy;
+  margin: 0 8px;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.12s, box-shadow 0.12s;
+  }
+
+  &.active::after {
+    background: #0891B2;
+    box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.15);
+  }
+}
+
 
 .tree-row {
   display: flex;
@@ -252,5 +341,6 @@ const onDrop = (e) => {
   &.danger {
     &:hover { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
   }
+
 }
 </style>

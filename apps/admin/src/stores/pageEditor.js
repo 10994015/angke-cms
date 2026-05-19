@@ -448,6 +448,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
     isLoading.value = true
     try {
       const res = await axiosClient.get(`/backend/web-site/${tid}`)
+      console.log('[fetchSiteSettings]', res.data)
       if (res.data.statusCode === 200 && res.data.data) { websiteSettings.value = res.data.data; return res.data.data }
     } catch (err) { error.value = err.message } finally { isLoading.value = false }
     return null
