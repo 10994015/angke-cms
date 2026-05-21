@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@angke/ui': fileURLToPath(new URL('../../packages/ui', import.meta.url)),
     },
   },
   server: {
