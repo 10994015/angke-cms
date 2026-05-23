@@ -29,6 +29,7 @@
               :locales="locales"
               :tabs="visibleTabs"
               :current-slug="slug"
+              :page-tree="pageTree"
             />
 
             <!-- Footer -->
@@ -137,21 +138,32 @@ const FOOTER_TYPES = new Set(['FOOTER', 'PV_FOOTER'])
 const isHeaderFrame = (frame: any) => HEADER_TYPES.has(frame?.type)
 const isFooterFrame = (frame: any) => FOOTER_TYPES.has(frame?.type)
 
-// ── Page tabs (from header basemap, for navbar + footer links) ─────────────────
+// ── All-page tree (public API, used for navbar tabs + pre-loaded children) ────
+
+const { data: allPageData } = await useAsyncData<any>(
+  `all-page-${apiLocale.value}`,
+  () => $fetch<any>(
+    '/api/all-page',
+    {
+      params: {
+        locale: apiLocale.value,
+        ...(webSiteId.value ? { webSiteId: webSiteId.value } : {}),
+      },
+    }
+  )
+)
+
+// ── Page tabs (from all-page API) ─────────────────────────────────────────────
 
 const visibleTabs = computed(() => {
-  for (const bm of basemaps.value) {
-    const isHeader = HEADER_TYPES.has(bm?.bgType) || HEADER_TYPES.has(bm?.frames?.[0]?.type)
-    if (isHeader) {
-      const frame = bm.frames?.[0]
-      const tabs: any[] = frame?.data?.tabs || frame?.data?.tab || []
-      return tabs
-        .filter((t: any) => t.slug !== 'portal' && t.name !== '入口頁')
-        .map((t: any) => ({ slug: t.slug, name: t.name || t.slug }))
-    }
-  }
-  return []
+  const pages: any[] = allPageData.value?.data || []
+  return pages
+    .filter((p: any) => p.slug !== 'portal')
+    .map((p: any) => ({ slug: p.slug, name: p.tab || p.seoTitle || p.slug }))
 })
+
+// pageTree：傳給 Navbar 預填 children，避免 hover 才懶載
+const pageTree = computed(() => allPageData.value?.data || [])
 
 // ── Basemap background style ───────────────────────────────────────────────────
 
@@ -171,11 +183,22 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 // ── SEO ────────────────────────────────────────────────────────────────────────
 
-const siteName = computed(() => siteData.value?.tenantName || '')
+const siteName   = computed(() => siteData.value?.tenantName || '')
+const pageInfo   = computed(() => pageData.value?.data || {})
+const seoTitle   = computed(() => pageInfo.value.seoTitle || pageInfo.value.tab || slug.value)
+const seoDesc    = computed(() => pageInfo.value.seoDescription || '')
+const seoKeyword = computed(() => pageInfo.value.seoKeywords || '')
 
 useHead({
-  title: () => `${slug.value}${siteName.value ? ' | ' + siteName.value : ''}`,
+  title: () => `${seoTitle.value}${siteName.value ? ' | ' + siteName.value : ''}`,
   htmlAttrs: { lang: locale.value },
+})
+
+useSeoMeta({
+  description: () => seoDesc.value || undefined,
+  keywords:    () => seoKeyword.value || undefined,
+  ogTitle:     () => `${seoTitle.value}${siteName.value ? ' | ' + siteName.value : ''}`,
+  ogDescription: () => seoDesc.value || undefined,
 })
 </script>
 

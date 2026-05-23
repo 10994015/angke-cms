@@ -1,15 +1,14 @@
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  if (!config.apiBase) return { statusCode: 404, data: [] }
+  if (!config.apiBase) return { statusCode: 200, data: [] }
 
-  const slug        = getRouterParam(event, 'slug')
   const query       = getQuery(event)
   const requestHost = getHeader(event, 'host') || ''
   const host        = config.devHost || requestHost
 
   try {
     const res = await $fetch<{ statusCode: number; data: any[] }>(
-      `${config.apiBase}/api/web-site/page/${slug}`,
+      `${config.apiBase}/api/web-site/all-page`,
       {
         headers: { host },
         params: {
@@ -19,10 +18,11 @@ export default defineEventHandler(async (event) => {
         timeout: 10000,
       }
     )
+    console.log(`[/api/all-page] statusCode=${res?.statusCode} count=${res?.data?.length}`)
     return res
   } catch (e: any) {
-    console.error(`[/api/page/${slug}] fetch failed:`, e?.message || e)
+    console.error('[/api/all-page] fetch failed:', e?.message || e)
   }
 
-  return { statusCode: 404, data: [] }
+  return { statusCode: 200, data: [] }
 })

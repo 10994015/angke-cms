@@ -1,8 +1,18 @@
+import { fileURLToPath } from 'node:url'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   ssr: true,
+
+  vite: {
+    resolve: {
+      alias: {
+        '@angke/ui': fileURLToPath(new URL('../../packages/ui', import.meta.url)),
+      },
+    },
+  },
 
   runtimeConfig: {
     // Server-only

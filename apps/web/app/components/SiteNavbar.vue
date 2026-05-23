@@ -11,14 +11,51 @@
 
       <!-- Desktop nav -->
       <nav v-if="!isMobile" class="pv-nav-menu">
-        <NuxtLink
+        <div
           v-for="tab in tabs"
           :key="tab.slug"
-          :to="`/${currentLocale}/${tab.slug}`"
-          class="pv-nav-item"
-          :class="{ active: tab.slug === currentSlug }"
-        >{{ tab.name }}</NuxtLink>
+          class="pv-nav-item-wrapper"
+          :ref="(el) => { if (el) wrapperRefs[tab.slug] = el as HTMLElement }"
+          @mouseenter="onNavEnter(tab.slug)"
+          @mouseleave="onNavWrapperLeave"
+        >
+          <NuxtLink
+            :to="`/${currentLocale}/${tab.slug}`"
+            class="pv-nav-item"
+            :class="{ active: isActive(tab.slug) }"
+          >
+            {{ tab.name }}
+            <svg
+              v-if="hasChildren(tab.slug)"
+              class="pv-nav-chevron"
+              :class="{ open: activeDropdown === tab.slug }"
+              width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </NuxtLink>
+        </div>
       </nav>
+
+      <!-- Desktop dropdown：交給 NavDropdownMenu 遞迴處理多層 -->
+      <Teleport to="body">
+        <Transition name="nav-dropdown">
+          <div
+            v-if="activeDropdown && hasChildren(activeDropdown)"
+            class="pv-nav-dropdown"
+            :style="dropdownStyle"
+            @mouseenter="onDropdownEnter"
+            @mouseleave="onDropdownLeave"
+          >
+            <NavDropdownMenu
+              :items="getChildren(activeDropdown)"
+              :depth="0"
+              :is-portal="true"
+            />
+          </div>
+        </Transition>
+      </Teleport>
 
       <!-- Right actions (desktop) -->
       <div v-if="!isMobile" class="pv-nav-actions">
@@ -62,18 +99,29 @@
       </button>
     </div>
 
-    <!-- Mobile dropdown -->
+    <!-- Mobile dropdown：flatten 遞迴，depth 用 paddingLeft 縮排 -->
     <Transition name="mobile-menu">
       <div v-if="isMobile && mobileOpen" class="pv-mobile-menu">
         <nav class="pv-mobile-nav">
-          <NuxtLink
-            v-for="tab in tabs"
-            :key="tab.slug"
-            :to="`/${currentLocale}/${tab.slug}`"
-            class="pv-mobile-nav-item"
-            :class="{ active: tab.slug === currentSlug }"
-            @click="mobileOpen = false"
-          >{{ tab.name }}</NuxtLink>
+          <template v-for="item in flatMobileItems" :key="item.slug + '-' + item.depth">
+            <div
+              class="pv-mobile-nav-item"
+              :class="{ active: item.isActive, 'is-child': item.depth > 0 }"
+              :style="item.depth > 0 ? { paddingLeft: `${24 + item.depth * 16}px` } : {}"
+              @click="onMobileItemClick(item)"
+            >
+              <span>{{ item.label }}</span>
+              <svg
+                class="pv-mobile-arrow"
+                :class="{ rotated: item.isExpanded }"
+                width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              >
+                <polyline v-if="item.mightHaveChildren" points="6 9 12 15 18 9"/>
+                <polyline v-else points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </template>
         </nav>
         <div class="pv-mobile-actions">
           <a class="pv-mobile-login-btn" :href="`${loginUrl}/login`">登入</a>
@@ -94,7 +142,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, provide, onMounted, onUnmounted, nextTick } from 'vue'
+import NavDropdownMenu from './NavDropdownMenu.vue'
 
 const props = defineProps<{
   frameData:     Record<string, any>
@@ -103,47 +152,218 @@ const props = defineProps<{
   locales:       { locale: string; label: string; urlCode: string }[]
   tabs:          { slug: string; name: string }[]
   currentSlug:   string
+  pageTree?:     { slug: string; tab?: string; seoTitle?: string; children?: any[] }[]
 }>()
 
 const config      = useRuntimeConfig()
 const defaultSlug = config.public.defaultSlug
 const loginUrl    = config.public.loginUrl
 
-const mobileOpen    = ref(false)
-const localeMenuOpen = ref(false)
-const localeBtnRef   = ref<HTMLElement | null>(null)
-
+// ── Mobile / resize ───────────────────────────────────────────────────────────
 const isMobile = ref(false)
 const updateMobile = () => { isMobile.value = window.innerWidth <= 768 }
-onMounted(() => { updateMobile(); window.addEventListener('resize', updateMobile) })
+onMounted(() => {
+  updateMobile()
+  window.addEventListener('resize', updateMobile)
+})
 onUnmounted(() => { window.removeEventListener('resize', updateMobile) })
 
+const mobileOpen = ref(false)
+
+// ── Logo / bg ─────────────────────────────────────────────────────────────────
 const logoSrc = computed(() => props.frameData.logoImgUrl || props.frameData.logoImgSrc || null)
 
 const navbarBgStyle = computed(() => {
   const bgImg = isMobile.value
     ? (props.basemapBg?.mobile || props.basemapBg?.tablet || props.basemapBg?.desktop)
-    : (props.basemapBg?.desktop)
-
+    : props.basemapBg?.desktop
   return {
     backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || '#ffffff',
     color: props.frameData.navTextColor || props.frameData.textColor || '#333333',
-    ...(bgImg ? {
-      backgroundImage: `url(${bgImg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    } : {}),
+    ...(bgImg ? { backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
   }
 })
+
+// ── Children cache ────────────────────────────────────────────────────────────
+const childrenCache = reactive<Record<string, { tab: string; slug: string }[]>>({})
+
+const getChildren = (slug: string) => childrenCache[slug] ?? []
+const hasChildren  = (slug: string) => (childrenCache[slug]?.length ?? 0) > 0
+
+// 懶載：cache 中沒有的節點才打 API
+const ensureChildren = async (slug: string) => {
+  if (slug in childrenCache) return
+  try {
+    const res = await $fetch<any>(`/api/children/${slug}`, {
+      params: { locale: props.currentLocale.toUpperCase() },
+    })
+    if (res?.statusCode === 200 && Array.isArray(res.data)) {
+      childrenCache[slug] = res.data.map((c: any) => ({ tab: c.tab || c.slug, slug: c.slug }))
+    } else {
+      childrenCache[slug] = []
+    }
+  } catch {
+    childrenCache[slug] = []
+  }
+}
+
+// 遞迴預填 pageTree → childrenCache（所有層）
+const populateFromTree = (nodes: any[]) => {
+  for (const n of nodes || []) {
+    if (n.slug && !(n.slug in childrenCache)) {
+      childrenCache[n.slug] = (Array.isArray(n.children) ? n.children : []).map((c: any) => ({
+        tab:  c.tab || c.seoTitle || c.slug,
+        slug: c.slug,
+      }))
+    }
+    if (Array.isArray(n.children) && n.children.length > 0) {
+      populateFromTree(n.children)
+    }
+  }
+}
+
+watch(() => props.pageTree, (tree) => {
+  if (tree?.length) populateFromTree(tree)
+}, { immediate: true })
+
+// ── Active state（遞迴：只要後代是當前頁就算 active）────────────────────────
+const isActive = (slug: string): boolean => {
+  if (slug === props.currentSlug) return true
+  const checkKids = (kids: any[]): boolean => {
+    for (const c of kids || []) {
+      if (c.slug === props.currentSlug || checkKids(childrenCache[c.slug] || [])) return true
+    }
+    return false
+  }
+  return checkKids(childrenCache[slug] || [])
+}
+
+// ── Provide 給 NavDropdownMenu（inject）───────────────────────────────────────
+const activeDropdown = ref<string | null>(null)
+
+provide('navDropdownState', {
+  getChildren,
+  hasChildren,
+  ensureChildren,
+  isActive,
+  getPath:    (slug: string) => `/${props.currentLocale}/${slug}`,
+  onNavigate: () => { activeDropdown.value = null },
+})
+
+// ── Desktop dropdown ──────────────────────────────────────────────────────────
+const dropdownStyle = ref<Record<string, string>>({})
+const wrapperRefs: Record<string, HTMLElement> = {}
+let closeTimer: ReturnType<typeof setTimeout> | null = null
+
+const updateDropdownPos = (slug: string) => {
+  const el = wrapperRefs[slug]
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  dropdownStyle.value = {
+    position: 'fixed',
+    top:  rect.bottom + 4 + 'px',
+    left: rect.left + rect.width / 2 + 'px',
+    zIndex: '99999',
+  }
+}
+
+const onNavEnter = async (slug: string) => {
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+  activeDropdown.value = slug
+  await nextTick()
+  updateDropdownPos(slug)
+  await ensureChildren(slug)
+}
+
+const onNavWrapperLeave = () => {
+  closeTimer = setTimeout(() => { activeDropdown.value = null }, 150)
+}
+
+const onDropdownEnter = () => {
+  if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
+}
+
+const onDropdownLeave = () => {
+  closeTimer = setTimeout(() => { activeDropdown.value = null }, 150)
+}
+
+// ── Mobile flat-list（遞迴展開，N 層）────────────────────────────────────────
+const expandedSlugs = ref(new Set<string>())
+
+const flatMobileItems = computed(() => {
+  const result: any[] = []
+  const addLevel = (items: { slug: string; name?: string; tab?: string }[], depth: number) => {
+    for (const item of items) {
+      const cachedKids   = childrenCache[item.slug]
+      const hasKnownKids = Array.isArray(cachedKids) && cachedKids.length > 0
+      const notFetched   = !(item.slug in childrenCache)
+      const isExpanded   = expandedSlugs.value.has(item.slug)
+      result.push({
+        slug:              item.slug,
+        label:             (item as any).name || (item as any).tab || item.slug,
+        depth,
+        isExpanded,
+        isActive:          isActive(item.slug),
+        mightHaveChildren: hasKnownKids || notFetched,
+      })
+      if (isExpanded && hasKnownKids) {
+        addLevel(cachedKids, depth + 1)
+      }
+    }
+  }
+  addLevel(props.tabs, 0)
+  return result
+})
+
+const collapseWithDescendants = (slug: string, set: Set<string>) => {
+  set.delete(slug)
+  for (const child of childrenCache[slug] || []) {
+    collapseWithDescendants(child.slug, set)
+  }
+}
+
+const onMobileItemClick = async (item: any) => {
+  if (!item.mightHaveChildren) {
+    navigateMobile(item.slug)
+    return
+  }
+  const next = new Set(expandedSlugs.value)
+  if (next.has(item.slug)) {
+    // 收合自己及所有後代
+    collapseWithDescendants(item.slug, next)
+    expandedSlugs.value = next
+    return
+  }
+  // 展開：先 fetch（若尚未在 cache）
+  next.add(item.slug)
+  expandedSlugs.value = next
+  await ensureChildren(item.slug)
+  // fetch 完確認真的沒有子頁面 → 直接導頁
+  if ((childrenCache[item.slug]?.length ?? 0) === 0) {
+    const cleaned = new Set(expandedSlugs.value)
+    cleaned.delete(item.slug)
+    expandedSlugs.value = cleaned
+    navigateMobile(item.slug)
+  }
+}
+
+const navigateMobile = (slug: string) => {
+  mobileOpen.value    = false
+  expandedSlugs.value = new Set()
+  navigateTo(`/${props.currentLocale}/${slug}`)
+}
+
+// ── Locale ────────────────────────────────────────────────────────────────────
+const localeMenuOpen      = ref(false)
+const localeBtnRef        = ref<HTMLElement | null>(null)
+const localeDropdownStyle = ref<Record<string, string>>({})
 
 const currentLocaleLabel = computed(() => {
   const found = props.locales.find(l => l.urlCode === props.currentLocale)
   return found?.label || props.currentLocale || '語言'
 })
 
-const localeDropdownStyle = ref({})
-
-const updateDropdownPos = () => {
+const updateLocaleDropdownPos = () => {
   if (!localeBtnRef.value) return
   const rect = localeBtnRef.value.getBoundingClientRect()
   localeDropdownStyle.value = {
@@ -154,11 +374,14 @@ const updateDropdownPos = () => {
   }
 }
 
-watch(localeMenuOpen, (open) => { if (open) nextTick(updateDropdownPos) })
+watch(localeMenuOpen, (open) => { if (open) nextTick(updateLocaleDropdownPos) })
 
-const handleOutsideClick = () => { localeMenuOpen.value = false }
+const handleOutsideClick = () => { localeMenuOpen.value = false; activeDropdown.value = null }
 onMounted(() => document.addEventListener('click', handleOutsideClick))
-onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+  if (closeTimer) clearTimeout(closeTimer)
+})
 </script>
 
 <style scoped>
@@ -185,12 +408,15 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 .pv-logo-wrapper { flex-shrink: 0; padding: 4px; }
 .pv-logo { display: flex; align-items: center; gap: 8px; min-width: 80px; min-height: 40px; }
 .pv-logo-image { max-width: 140px; max-height: 40px; width: auto; height: auto; object-fit: contain; }
-.pv-logo-icon { display: flex; align-items: center; }
 
+/* Desktop nav */
 .pv-nav-menu { display: flex; gap: 0.25rem; flex: 1; justify-content: center; }
+.pv-nav-item-wrapper { position: relative; }
+
 .pv-nav-item {
   display: flex;
   align-items: center;
+  gap: 4px;
   color: inherit;
   text-decoration: none;
   font-size: 14px;
@@ -204,6 +430,20 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 .pv-nav-item:hover, .pv-nav-item.active { opacity: 1; color: #0891B2; }
 .pv-nav-item.active { font-weight: 600; }
 
+.pv-nav-chevron { transition: transform 0.2s; flex-shrink: 0; }
+.pv-nav-chevron.open { transform: rotate(180deg); }
+
+/* Desktop dropdown wrapper：position/top/left 由 dropdownStyle 控制，
+   translateX(-50%) 由 .ndm--portal 負責，這裡不能重複加 */
+.pv-nav-dropdown {
+  /* 純容器，無額外 transform */
+}
+
+.nav-dropdown-enter-active { transition: opacity 0.18s cubic-bezier(0.4,0,0.2,1); }
+.nav-dropdown-leave-active { transition: opacity 0.12s cubic-bezier(0.4,0,0.2,1); }
+.nav-dropdown-enter-from, .nav-dropdown-leave-to { opacity: 0; }
+
+/* Right actions */
 .pv-nav-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .pv-locale-wrapper { position: relative; }
 
@@ -224,9 +464,7 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
   font-family: inherit;
 }
 .pv-locale-btn:hover { border-color: #0891B2; color: #0891B2; }
-
 .pv-locale-label { font-size: 13px; }
-
 .pv-chevron { transition: transform 0.2s; }
 .pv-chevron.open { transform: rotate(180deg); }
 
@@ -238,20 +476,15 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
   overflow: hidden;
   min-width: 100px;
 }
-
 .pv-locale-option {
   display: block;
   width: 100%;
   padding: 10px 16px;
-  border: none;
-  background: transparent;
-  text-align: left;
   font-size: 13px;
   font-weight: 500;
   color: #374151;
   cursor: pointer;
   transition: background 0.15s;
-  font-family: inherit;
   text-decoration: none;
 }
 .pv-locale-option:hover { background: #f9fafb; }
@@ -260,6 +493,23 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 .locale-dropdown-enter-active { transition: all 0.18s cubic-bezier(0.4,0,0.2,1); }
 .locale-dropdown-leave-active { transition: all 0.15s cubic-bezier(0.4,0,0.2,1); }
 .locale-dropdown-enter-from, .locale-dropdown-leave-to { opacity: 0; transform: translateY(-6px); }
+
+/* Login */
+.pv-login-btn {
+  padding: 7px 20px;
+  border: 1.5px solid #0891B2;
+  border-radius: 20px;
+  background: transparent;
+  color: #0891B2;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.pv-login-btn:hover { background: #0891B2; color: #fff; }
 
 /* Hamburger */
 .pv-hamburger-btn {
@@ -292,6 +542,7 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 .pv-hamburger-btn.is-open .pv-hamburger-line:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .pv-hamburger-btn.is-open .pv-hamburger-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
+/* Mobile menu */
 .pv-mobile-menu {
   position: absolute;
   top: 64px;
@@ -305,39 +556,39 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
 }
 
 .pv-mobile-nav { padding: 8px 0; }
+
 .pv-mobile-nav-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 14px 24px;
   color: inherit;
-  text-decoration: none;
   font-size: 15px;
   font-weight: 500;
   border-left: 3px solid transparent;
   transition: all 0.18s;
+  cursor: pointer;
 }
-.pv-mobile-nav-item:hover, .pv-mobile-nav-item.active {
+
+/* 子層：背景略深、字體縮小；padding-left 由 inline style 控制 */
+.pv-mobile-nav-item.is-child {
+  font-size: 14px;
+  font-weight: 400;
+  color: #555;
+  background: #fafafa;
+  border-left-color: #f0e8e5;
+}
+
+.pv-mobile-nav-item:hover,
+.pv-mobile-nav-item.active {
   color: #0891B2;
   background: #f0f9ff;
   border-left-color: #0891B2;
 }
 .pv-mobile-nav-item.active { font-weight: 600; }
 
-.pv-login-btn {
-  padding: 7px 20px;
-  border: 1.5px solid #0891B2;
-  border-radius: 20px;
-  background: transparent;
-  color: #0891B2;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: inherit;
-  text-decoration: none;
-  transition: all 0.2s;
-  &:hover { background: #0891B2; color: #fff; }
-}
+.pv-mobile-arrow { flex-shrink: 0; transition: transform 0.2s; }
+.pv-mobile-arrow.rotated { transform: rotate(180deg); }
 
 .pv-mobile-actions {
   display: flex;
@@ -358,15 +609,13 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
+  text-decoration: none;
+  text-align: center;
   transition: background 0.2s;
-  &:hover { background: #0E7490; }
 }
+.pv-mobile-login-btn:hover { background: #0E7490; }
 
-.pv-mobile-locale {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+.pv-mobile-locale { display: flex; gap: 8px; flex-wrap: wrap; }
 .pv-mobile-locale-btn {
   padding: 7px 14px;
   border: 1.5px solid #ddd;
@@ -379,7 +628,8 @@ onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
   font-family: inherit;
   text-decoration: none;
 }
-.pv-mobile-locale-btn:hover, .pv-mobile-locale-btn.active { border-color: #0891B2; color: #0891B2; }
+.pv-mobile-locale-btn:hover,
+.pv-mobile-locale-btn.active { border-color: #0891B2; color: #0891B2; }
 .pv-mobile-locale-btn.active { background: #f0f9ff; font-weight: 600; }
 
 .mobile-menu-enter-active { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
