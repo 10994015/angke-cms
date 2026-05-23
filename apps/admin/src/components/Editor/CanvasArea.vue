@@ -1,17 +1,27 @@
 ﻿<template>
   <div class="canvas-area" @click.self="store.clearSelection()">
-    <!-- 畫布載入中 -->
-    <Transition name="canvas-fade">
-      <div v-if="store.isLoading" class="canvas-loading">
-        <div class="canvas-spinner" />
+    <!-- 畫布骨架（isLoading 或尚未選定頁面時蓋住畫布） -->
+    <div v-if="store.isLoading || !store.currentPageSlug" class="canvas-skeleton">
+      <div class="sk-navbar" />
+      <div class="sk-block sk-block--hero" />
+      <div class="sk-block sk-block--section">
+        <div class="sk-row">
+          <div class="sk-col" /><div class="sk-col" /><div class="sk-col" />
+        </div>
       </div>
-    </Transition>
+      <div class="sk-block sk-block--section">
+        <div class="sk-row">
+          <div class="sk-col sk-col--wide" /><div class="sk-col" />
+        </div>
+      </div>
+      <div class="sk-footer" />
+    </div>
 
     <div class="device-wrapper" :class="`device-${store.currentDevice}`">
 
       <!-- 空畫布提示 -->
       <div
-        v-if="!store.currentPageBasemaps.length && !store.isLoading"
+        v-if="store.currentPageSlug && !store.currentPageBasemaps.length && !store.isLoading"
         class="empty-canvas"
         :class="{ 'drag-over': isEmptyDragOver }"
         @dragover.prevent="isEmptyDragOver = true; $event.dataTransfer.dropEffect = 'copy'"
@@ -29,7 +39,7 @@
       </div>
 
       <!-- 區塊列表 -->
-      <template v-else>
+      <template v-else-if="store.currentPageBasemaps.length">
         <template v-for="(basemap, bIdx) in store.currentPageBasemaps" :key="bIdx">
           <!-- HEADER basemap -->
           <BasemapWrapper
@@ -223,32 +233,72 @@ const addFirstSection = () => {
 </script>
 
 <style scoped lang="scss">
-.canvas-loading {
+/* ── 骨架 ── */
+@keyframes sk-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+%sk-base {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 800px 100%;
+  animation: sk-shimmer 1.4s infinite linear;
+  border-radius: 4px;
+}
+
+.canvas-skeleton {
   position: absolute;
   inset: 0;
   z-index: 3000;
-  background: rgba(229, 231, 235, 0.7);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #fff;
   pointer-events: all;
+  overflow: hidden;
 }
 
-.canvas-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(8, 145, 178, 0.2);
-  border-top-color: #0891B2;
-  border-radius: 50%;
-  animation: canvas-spin 0.7s linear infinite;
+.sk-navbar {
+  @extend %sk-base;
+  height: 64px;
+  border-radius: 0;
+  margin-bottom: 0;
 }
 
-@keyframes canvas-spin { to { transform: rotate(360deg); } }
+.sk-block {
+  margin: 16px 24px;
+  border-radius: 8px;
+  overflow: hidden;
 
-.canvas-fade-enter-active { transition: opacity 0.15s; }
-.canvas-fade-leave-active { transition: opacity 0.25s; }
-.canvas-fade-enter-from, .canvas-fade-leave-to { opacity: 0; }
+  &--hero {
+    @extend %sk-base;
+    height: 220px;
+  }
+
+  &--section {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    padding: 20px;
+    min-height: 120px;
+  }
+}
+
+.sk-row {
+  display: flex;
+  gap: 12px;
+}
+
+.sk-col {
+  @extend %sk-base;
+  flex: 1;
+  height: 80px;
+
+  &--wide { flex: 2; }
+}
+
+.sk-footer {
+  @extend %sk-base;
+  height: 80px;
+  margin: 16px 24px;
+  border-radius: 8px;
+}
 
 .canvas-area {
   flex: 1;

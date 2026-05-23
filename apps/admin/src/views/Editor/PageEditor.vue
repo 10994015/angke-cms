@@ -19,7 +19,7 @@
 
     <!-- 骨架（只有初次進入才顯示） -->
     <Transition name="loader-fade">
-      <div v-if="store.isLoading && isInitialLoad" class="loading-overlay">
+      <div v-if="isInitialLoad" class="loading-overlay">
         <!-- 骨架畫面 -->
         <div class="skeleton-editor">
           <!-- Toolbar 骨架 -->

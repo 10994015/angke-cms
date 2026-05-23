@@ -17,6 +17,19 @@ const totalPages = ref(1)
 const sortBy     = ref('createdAt')
 const sortOrder  = ref('DESC')
 
+const subdomainWebsiteModel = ref(false)
+
+const fetchSubdomainModel = async () => {
+  try {
+    const res = await axiosClient.get('/backend/web-site/subdomain-web-site-model')
+    if (res.data.statusCode === 200 && res.data.data) {
+      subdomainWebsiteModel.value = res.data.data.subdomainWebsiteModel === true
+    }
+  } catch {
+    subdomainWebsiteModel.value = false
+  }
+}
+
 const createVisible  = ref(false)
 const createSubdomain = ref('')
 const createError    = ref('')
@@ -221,13 +234,16 @@ const formatDate = (iso) => {
   return new Date(iso).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
-onMounted(fetchSites)
+onMounted(() => {
+  fetchSubdomainModel()
+  fetchSites()
+})
 </script>
 
 <template>
   <AdminLayout title="網站管理">
     <template #header-actions>
-      <button class="btn-create" @click="openCreate">
+      <button v-if="subdomainWebsiteModel" class="btn-create" @click="openCreate">
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
           <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
         </svg>
