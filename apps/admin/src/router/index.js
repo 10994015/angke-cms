@@ -6,33 +6,33 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/login',
+      path: '/backend/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
       meta: { requiresGuest: true },
     },
     {
-      path: '/dashboard',
-      redirect: '/websites',
+      path: '/backend/dashboard',
+      redirect: '/backend/websites',
     },
     {
-      path: '/init-password/:token',
+      path: '/backend/init-password/:token',
       name: 'init-password',
       component: () => import('../views/InitPasswordView.vue'),
     },
     {
-      path: '/forgot-password',
+      path: '/backend/forgot-password',
       name: 'forgot-password',
       component: () => import('../views/ForgotPasswordView.vue'),
     },
     {
-      path: '/profile',
+      path: '/backend/profile',
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
       meta: { requiresAuth: true },
     },
     {
-      path: '/profile/change-password',
+      path: '/backend/profile/change-password',
       name: 'profile.change-password',
       component: () => import('../views/ChangePasswordView.vue'),
       meta: { requiresAuth: true },
@@ -40,19 +40,19 @@ const router = createRouter({
 
     // ── 帳號管理 ──
     {
-      path: '/users',
+      path: '/backend/users',
       name: 'users',
       component: () => import('../views/UsersView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ACCOUNT_MANAGEMENT, permissionMode: 'Readonly' },
     },
     {
-      path: '/users/create',
+      path: '/backend/users/create',
       name: 'users.create',
       component: () => import('../views/UserCreateView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ACCOUNT_MANAGEMENT, permissionMode: 'FULL' },
     },
     {
-      path: '/users/:id',
+      path: '/backend/users/:id',
       name: 'users.detail',
       component: () => import('../views/UserDetailView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ACCOUNT_MANAGEMENT, permissionMode: 'Readonly' },
@@ -60,13 +60,13 @@ const router = createRouter({
 
     // ── 網站管理 ──
     {
-      path: '/websites',
+      path: '/backend/websites',
       name: 'websites',
       component: () => import('../views/WebSiteListView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.WEBSITE_MANAGEMENT, permissionMode: 'Readonly' },
     },
     {
-      path: '/websites/:siteId/pages',
+      path: '/backend/websites/:siteId/pages',
       name: 'websites.pages',
       component: () => import('../views/PageManagementView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.WEBSITE_MANAGEMENT, permissionMode: 'Readonly' },
@@ -74,19 +74,19 @@ const router = createRouter({
 
     // ── 信件管理 ──
     {
-      path: '/mail',
+      path: '/backend/mail',
       name: 'mail',
       component: () => import('../views/MailView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.MAIL_MANAGEMENT, permissionMode: 'Readonly' },
     },
     {
-      path: '/mail/create',
+      path: '/backend/mail/create',
       name: 'mail.create',
       component: () => import('../views/MailCreateView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.MAIL_MANAGEMENT, permissionMode: 'FULL' },
     },
     {
-      path: '/mail/:id/edit',
+      path: '/backend/mail/:id/edit',
       name: 'mail.edit',
       component: () => import('../views/MailEditView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.MAIL_MANAGEMENT, permissionMode: 'FULL' },
@@ -94,7 +94,7 @@ const router = createRouter({
 
     // ── 系統日誌 ──
     {
-      path: '/logs',
+      path: '/backend/logs',
       name: 'logs',
       component: () => import('../views/SystemLogView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.LOG_MANAGEMENT, permissionMode: 'Readonly' },
@@ -102,25 +102,25 @@ const router = createRouter({
 
     // ── 權限角色管理 ──
     {
-      path: '/roles',
+      path: '/backend/roles',
       name: 'roles',
       component: () => import('../views/RolesView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ROLE_MANAGEMENT, permissionMode: 'Readonly' },
     },
     {
-      path: '/roles/create',
+      path: '/backend/roles/create',
       name: 'roles.create',
       component: () => import('../views/RoleCreateView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ROLE_MANAGEMENT, permissionMode: 'FULL' },
     },
     {
-      path: '/roles/:id/edit',
+      path: '/backend/roles/:id/edit',
       name: 'roles.edit',
       component: () => import('../views/RoleEditView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ROLE_MANAGEMENT, permissionMode: 'Readonly' },
     },
     {
-      path: '/roles/:id/members',
+      path: '/backend/roles/:id/members',
       name: 'roles.members',
       component: () => import('../views/RoleMembersView.vue'),
       meta: { requiresAuth: true, permission: PERMISSIONS.ROLE_MEMBER_MANAGEMENT, permissionMode: 'FULL' },
@@ -128,7 +128,7 @@ const router = createRouter({
 
     // ── CMS 頁面編輯器（全頁，無 AdminLayout 側邊欄）──
     {
-      path: '/editor',
+      path: '/backend/editor',
       component: () => import('../layouts/EditorLayout.vue'),
       meta: { requiresAuth: true },
       children: [
@@ -155,7 +155,7 @@ const router = createRouter({
 
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/websites',
+      redirect: '/backend/websites',
     },
   ],
 })
@@ -165,11 +165,11 @@ router.beforeEach(async (to, from) => {
   const isAuth = await authStore.checkAuth()
 
   if (to.meta.requiresAuth && !isAuth) {
-    return { path: '/login', query: { redirect: to.fullPath } }
+    return { path: '/backend/login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.requiresGuest && isAuth) {
-    return '/websites'
+    return '/backend/websites'
   }
 
   if (to.meta.permission) {
@@ -181,10 +181,10 @@ router.beforeEach(async (to, from) => {
       // Has readonly but page requires FULL — warn and stay
       if (requiredMode === 'FULL' && authStore.hasPermission(permissionName, 'Readonly')) {
         alert('您沒有執行此操作的權限')
-        return from.path || '/websites'
+        return from.path || '/backend/websites'
       }
       // No permission at all — redirect to home
-      return '/websites'
+      return '/backend/websites'
     }
   }
 })

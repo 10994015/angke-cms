@@ -153,16 +153,41 @@ const { data: allPageData } = await useAsyncData<any>(
   )
 )
 
-// ── Page tabs (from all-page API) ─────────────────────────────────────────────
+// ── slug → 顯示名稱 對照表（從 all-page 樹狀遞迴建立）─────────────────────────
 
-const visibleTabs = computed(() => {
-  const pages: any[] = allPageData.value?.data || []
-  return pages
-    .filter((p: any) => p.slug !== 'portal')
-    .map((p: any) => ({ slug: p.slug, name: p.tab || p.seoTitle || p.slug }))
+const slugLabelMap = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {}
+  const flatten = (nodes: any[]) => {
+    for (const n of nodes || []) {
+      map[n.slug] = n.tab || n.seoTitle || n.slug
+      if (n.children?.length) flatten(n.children)
+    }
+  }
+  flatten(allPageData.value?.data || [])
+  return map
 })
 
-// pageTree：傳給 Navbar 預填 children，避免 hover 才懶載
+// ── Page tabs：照 CMS header frame 設定的清單，名稱用 slugLabelMap 解析 ────────
+
+const visibleTabs = computed(() => {
+  // 找 header basemap 裡的第一個 header frame
+  for (const bm of basemaps.value) {
+    const isHeader = HEADER_TYPES.has(bm?.bgType) || HEADER_TYPES.has(bm?.frames?.[0]?.type)
+    if (isHeader) {
+      const frame = bm.frames?.[0]
+      const tabs: any[] = frame?.data?.tabs || frame?.data?.tab || []
+      return tabs
+        .filter((t: any) => t.slug !== 'portal' && t.name !== '入口頁')
+        .map((t: any) => ({
+          slug: t.slug,
+          name: slugLabelMap.value[t.slug] || t.name || t.slug,
+        }))
+    }
+  }
+  return []
+})
+
+// pageTree：傳給 Navbar 預填整棵 children tree
 const pageTree = computed(() => allPageData.value?.data || [])
 
 // ── Basemap background style ───────────────────────────────────────────────────
