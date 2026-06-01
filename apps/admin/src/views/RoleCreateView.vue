@@ -54,7 +54,7 @@ const handleSave = async () => {
       permissions: formPerms.value,
     })
     if (res.statusCode === 200 || res.statusCode === 201) {
-      router.push('/roles')
+      router.push('/backend/roles')
     } else {
       error.value = res.message || '新增失敗'
     }
@@ -69,7 +69,7 @@ const handleSave = async () => {
 <template>
   <AdminLayout title="新增角色">
     <template #header-actions>
-      <button class="btn-back" @click="router.push('/roles')">
+      <button class="btn-back" @click="router.push('/backend/roles')">
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
           <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
         </svg>
@@ -98,7 +98,7 @@ const handleSave = async () => {
         <p v-if="error" class="form-error">{{ error }}</p>
 
         <div class="form-actions">
-          <button class="btn-cancel" @click="router.push('/roles')">取消</button>
+          <button class="btn-cancel" @click="router.push('/backend/roles')">取消</button>
           <button class="btn-save" :disabled="saving" @click="handleSave">
             {{ saving ? '新增中...' : '新增角色' }}
           </button>

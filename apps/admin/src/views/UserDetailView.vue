@@ -334,7 +334,7 @@ const handleDelete = async () => {
     const response = await axiosClient.delete(`/backend/user/${userId}`)
     if (response.status === 200) {
       showDeleteConfirm.value = false
-      router.push('/users')
+      router.push('/backend/users')
     } else {
       deleteError.value = response.data?.message || '刪除失敗'
     }

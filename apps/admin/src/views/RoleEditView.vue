@@ -79,7 +79,7 @@ const handleSave = async () => {
       permissions: formPerms.value,
     })
     if (res.statusCode === 200) {
-      router.push('/roles')
+      router.push('/backend/roles')
     } else {
       error.value = res.message || '儲存失敗'
     }
@@ -97,7 +97,7 @@ const handleDelete = async () => {
   try {
     const res = await store.deleteRole(id)
     if (res.statusCode === 200) {
-      router.push('/roles')
+      router.push('/backend/roles')
     } else {
       error.value = res.message || '刪除失敗'
     }
@@ -112,13 +112,13 @@ const handleDelete = async () => {
 <template>
   <AdminLayout title="編輯角色">
     <template #header-actions>
-      <button class="btn-back" @click="router.push('/roles')">
+      <button class="btn-back" @click="router.push('/backend/roles')">
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
           <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
         </svg>
         返回列表
       </button>
-      <button v-if="authStore.hasPermission('權限角色成員管理', 'FULL')" class="btn-members" @click="router.push(`/roles/${id}/members`)">
+      <button v-if="authStore.hasPermission('權限角色成員管理', 'FULL')" class="btn-members" @click="router.push(`/backend/roles/${id}/members`)">
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
           <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
         </svg>
@@ -156,7 +156,7 @@ const handleDelete = async () => {
             {{ deleting ? '刪除中...' : '刪除角色' }}
           </button>
           <div class="actions-right">
-            <button class="btn-cancel" @click="router.push('/roles')">取消</button>
+            <button class="btn-cancel" @click="router.push('/backend/roles')">取消</button>
             <button class="btn-save" :disabled="saving" @click="handleSave">
               {{ saving ? '儲存中...' : '儲存' }}
             </button>

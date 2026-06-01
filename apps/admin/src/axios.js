@@ -33,7 +33,7 @@ axiosClient.interceptors.response.use(
       isHandling401 = true
 
       const currentPath = window.location.pathname
-      const publicPages = ['/login', '/forgot-password', '/init-password']
+      const publicPages = ['/backend/login', '/backend/forgot-password', '/backend/init-password']
       const isPublicPage = publicPages.some((page) => currentPath.startsWith(page))
 
       if (isPublicPage) {
@@ -44,7 +44,7 @@ axiosClient.interceptors.response.use(
       if (onUnauthorized) {
         onUnauthorized()
       } else {
-        window.location.href = '/login'
+        window.location.href = '/backend/login'
       }
     }
 

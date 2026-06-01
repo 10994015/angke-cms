@@ -99,7 +99,7 @@ const handleSave = async () => {
     const payload = Array.from(userSelections.entries()).map(([userId, isInRole]) => ({ userId, isInRole }))
     const res = await store.updateRoleUsers(id, payload)
     if (res.statusCode === 200) {
-      router.push(`/roles/${id}/edit`)
+      router.push(`/backend/roles/${id}/edit`)
     } else {
       error.value = res.message || '儲存失敗'
     }
@@ -133,7 +133,7 @@ const pageRange = computed(() => {
 <template>
   <AdminLayout :title="`管理成員 — ${roleName}`">
     <template #header-actions>
-      <button class="btn-back" @click="router.push(`/roles/${id}/edit`)">
+      <button class="btn-back" @click="router.push(`/backend/roles/${id}/edit`)">
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
           <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
         </svg>
@@ -250,7 +250,7 @@ const pageRange = computed(() => {
     <div class="bottom-actions">
       <p v-if="error" class="form-error">{{ error }}</p>
       <div class="actions-right">
-        <button class="btn-cancel" @click="router.push(`/roles/${id}/edit`)">取消</button>
+        <button class="btn-cancel" @click="router.push(`/backend/roles/${id}/edit`)">取消</button>
         <button class="btn-save" :disabled="saving || loading" @click="handleSave">
           {{ saving ? '儲存中...' : '儲存' }}
         </button>

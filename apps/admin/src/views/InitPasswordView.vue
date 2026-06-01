@@ -39,7 +39,7 @@ const handleSubmit = async () => {
     })
     if (result.success) {
       alert('密碼設定成功，請重新登入')
-      router.push('/login')
+      router.push('/backend/login')
     } else {
       errorMsg.value = result.error || '設定失敗，請稍後再試'
     }

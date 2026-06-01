@@ -87,7 +87,7 @@ const siteUrl = computed(() => {
 
 const handleBack = () => {
   if (store.hasUnsavedChanges && !confirm('確定要返回後台嗎？未儲存的變更將會遺失。')) return
-  router.push({ path: '/dashboard' })
+  router.push({ path: '/backend/dashboard' })
 }
 </script>
 

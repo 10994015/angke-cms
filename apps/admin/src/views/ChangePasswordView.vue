@@ -4,7 +4,7 @@
       <div class="change-pw-card">
 
         <!-- 返回連結 -->
-        <button class="back-link" @click="router.push('/profile')">
+        <button class="back-link" @click="router.push('/backend/profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           返回個人資料
         </button>
@@ -133,7 +133,7 @@ const handleSubmit = async () => {
 
   if (result.success) {
     success.value = true
-    setTimeout(() => router.push('/profile'), 2000)
+    setTimeout(() => router.push('/backend/profile'), 2000)
   } else {
     errorMsg.value = result.error || '密碼更新失敗，請稍後再試'
   }

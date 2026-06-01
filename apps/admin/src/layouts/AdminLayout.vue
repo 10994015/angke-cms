@@ -10,7 +10,6 @@ defineProps({
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-
 const collapsed = ref(false)
 
 onMounted(() => {
@@ -21,11 +20,11 @@ onMounted(() => {
 })
 
 const PERMISSION_MAP = {
-  '網站管理':    { path: '/websites', icon: 'globe',  group: '內容管理' },
-  '帳號管理':    { path: '/users',    icon: 'users',  group: '會員管理' },
-  '權限角色管理': { path: '/roles',    icon: 'shield', group: '會員管理' },
-  '信件管理':    { path: '/mail',     icon: 'mail',   group: '通訊'   },
-  '系統日誌查詢': { path: '/logs',     icon: 'log',    group: '系統'   },
+  '網站管理':    { path: '/backend/websites', icon: 'globe',  group: '內容管理' },
+  '帳號管理':    { path: '/backend/users',    icon: 'users',  group: '會員管理' },
+  '權限角色管理': { path: '/backend/roles',    icon: 'shield', group: '會員管理' },
+  '信件管理':    { path: '/backend/mail',     icon: 'mail',   group: '通訊'   },
+  '系統日誌查詢': { path: '/backend/logs',     icon: 'log',    group: '系統'   },
 }
 
 const GROUP_ORDER = ['內容管理', '會員管理', '通訊', '系統']
@@ -48,7 +47,7 @@ const isActive = (path) => route.path === path || route.path.startsWith(path + '
 
 const handleLogout = async () => {
   await authStore.logout()
-  router.push('/login')
+  router.push('/backend/login')
 }
 </script>
 
@@ -69,7 +68,7 @@ const handleLogout = async () => {
         </button>
       </div>
 
-      <div v-show="!collapsed" class="sidebar-account" @click="router.push('/profile')">
+      <div v-show="!collapsed" class="sidebar-account" @click="router.push('/backend/profile')">
         <div class="account-info">
           <span class="account-name">{{ authStore.user?.name }}</span>
           <span class="account-badge">管理員</span>

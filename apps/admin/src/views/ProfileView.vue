@@ -152,7 +152,7 @@
                   <span class="security-label">登入密碼</span>
                   <span class="security-desc">定期更換密碼可提升帳號安全性</span>
                 </div>
-                <button class="btn-goto" @click="router.push('/profile/change-password')">
+                <button class="btn-goto" @click="router.push('/backend/profile/change-password')">
                   修改密碼
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>

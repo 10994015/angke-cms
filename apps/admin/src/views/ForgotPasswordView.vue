@@ -57,7 +57,7 @@ const handleSubmit = async () => {
         <button class="btn-resend" @click="sent = false; email = ''">重新發送</button>
       </div>
 
-      <a class="back-link" @click="router.push('/login')">← 返回登入</a>
+      <a class="back-link" @click="router.push('/backend/login')">← 返回登入</a>
     </div>
   </div>
 </template>
