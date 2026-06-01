@@ -14,6 +14,10 @@ export default defineEventHandler(async (event) => {
     tenantName: domain || '',
   }
 
+  if (import.meta.dev) {
+    return fallbackSite
+  }
+
   try {
     const res = await $fetch<{ statusCode: number; data: Record<string, any> }>(
       `${config.apiBase}/web-site/`,
