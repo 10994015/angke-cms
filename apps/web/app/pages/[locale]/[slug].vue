@@ -12,7 +12,15 @@
 
     <!-- Route page failed -->
     <div v-else-if="showPageError" class="site-error">
-      <p>{{ pageErrorMessage }}</p>
+      <div class="site-error-card">
+        <p class="site-error-title">{{ pageErrorMessage }}</p>
+        <div class="site-error-meta">
+          <div><span>請求 URL</span><code>{{ requestUrl }}</code></div>
+          <div><span>Status Code</span><code>{{ pageStatusCode }}</code></div>
+          <div><span>後端 URL</span><code>{{ pageErrorBackendUrl || '-' }}</code></div>
+        </div>
+        <pre v-if="pageErrorBackendDataText" class="site-error-json">{{ pageErrorBackendDataText }}</pre>
+      </div>
     </div>
 
     <!-- Page content -->
@@ -122,7 +130,7 @@ const locales = computed<{ locale: string; urlCode: string; label: string }[]>((
 // ── Page content ──────────────────────────────────────────────────────────────
 
 const { data: pageData, pending } = await useAsyncData<any>(
-  () => `page-by-route:${locale.value}:${slug.value}`,
+  'page-by-route',
   () => $fetch<any>(
     `/api/page/${slug.value}`,
     {
@@ -134,12 +142,34 @@ const { data: pageData, pending } = await useAsyncData<any>(
   ),
   {
     watch: [slug, apiLocale, webSiteId],
-    default: () => ({ statusCode: 500, data: { contentJson: [] } }),
+    default: () => null,
   }
 )
 
-const pageStatusCode = computed(() => Number(pageData.value?.statusCode || 500))
-const showPageError = computed(() => !pending.value && pageStatusCode.value !== 200)
+const pageStatusCode = computed(() => Number(pageData.value?.statusCode || 0))
+const pageLoadStatus = computed(() => pageData.value?.statusCode === 200 ? 'success' : pending.value ? 'pending' : 'idle')
+const lastSuccessfulPageData = shallowRef<any | null>(null)
+const pageErrorDetails = computed(() => pageData.value?.error || null)
+const requestUrl = computed(() => route.fullPath)
+const pageErrorBackendUrl = computed(() => pageErrorDetails.value?.backendUrl || '')
+const pageErrorBackendDataText = computed(() => {
+  const data = pageErrorDetails.value?.backendData
+  if (data === undefined || data === null || data === '') return ''
+  try {
+    return JSON.stringify(data, null, 2)
+  } catch {
+    return String(data)
+  }
+})
+
+watch(pageData, (value) => {
+  if (value?.statusCode === 200) {
+    lastSuccessfulPageData.value = value
+  }
+}, { immediate: true })
+
+const activePageData = computed(() => pageData.value?.statusCode === 200 ? pageData.value : lastSuccessfulPageData.value)
+const showPageError = computed(() => !pending.value && !!pageErrorDetails.value)
 const pageErrorMessage = computed(() =>
   pageStatusCode.value === 404
     ? '找不到頁面'
@@ -147,13 +177,13 @@ const pageErrorMessage = computed(() =>
 )
 
 const basemaps = computed<any[]>(() => {
-  const d = pageData.value
+  const d = activePageData.value
   if (!d || d.statusCode !== 200) return []
   const content = d.data?.contentJson
   return Array.isArray(content) ? content : []
 })
 
-const showInitialLoading = computed(() => pending.value && basemaps.value.length === 0)
+const showInitialLoading = computed(() => pending.value && !lastSuccessfulPageData.value)
 
 // ── Frame type helpers ─────────────────────────────────────────────────────────
 
@@ -263,6 +293,57 @@ useSeoMeta({
 .site-spinner { width: 36px; height: 36px; border: 3px solid #e5e7eb; border-top-color: #0891B2; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .site-error { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-size: 16px; color: #6b7280; }
+.site-error-card {
+  width: min(920px, calc(100vw - 32px));
+  padding: 20px 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+  color: #111827;
+}
+.site-error-title {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+.site-error-meta {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.site-error-meta > div {
+  display: grid;
+  gap: 4px;
+}
+.site-error-meta span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.site-error-meta code {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.site-error-json {
+  margin: 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: auto;
+  max-height: 360px;
+}
 .scroll-top-btn { position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px; border-radius: 50%; border: none; background: #0891B2; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(8,145,178,0.4); transition: all 0.2s; z-index: 999; }
 .scroll-top-btn:hover { background: #0E7490; transform: translateY(-2px); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s; }
