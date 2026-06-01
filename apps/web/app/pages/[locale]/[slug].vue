@@ -105,7 +105,7 @@ const apiLocale = computed(() => locale.value.toUpperCase())  // zh-tw → ZH-TW
 
 const { data: siteData } = await useAsyncData<Record<string, any> | null>(
   'site',
-  () => $fetch<any>('/api/site')
+  () => $fetch<any>('/nuxt-api/site')
 )
 
 // webSiteId used in all API calls (backend uses Hostname in prod, but explicit ID is safer)
@@ -116,7 +116,7 @@ const webSiteId = computed(() => siteData.value?.tenantId || undefined)
 const { data: localesData } = await useAsyncData<any>(
   'locales-by-site',
   () => $fetch<any>(
-    '/api/locales',
+    '/nuxt-api/locales',
     { params: webSiteId.value ? { webSiteId: webSiteId.value } : undefined }
   ),
   {
@@ -140,7 +140,7 @@ const locales = computed<{ locale: string; urlCode: string; label: string }[]>((
 const { data: pageData, pending } = await useAsyncData<any>(
   () => `page-by-route:${locale.value}:${slug.value}`,
   () => $fetch<any>(
-    `/api/page/${slug.value}`,
+    `/nuxt-api/page/${slug.value}`,
     {
       params: {
         locale: apiLocale.value,
@@ -215,7 +215,7 @@ const isFooterFrame = (frame: any) => FOOTER_TYPES.has(frame?.type)
 const { data: allPageData } = await useAsyncData<any>(
   'all-page-by-locale',
   () => $fetch<any>(
-    '/api/all-page',
+    '/nuxt-api/all-page',
     {
       params: {
         locale: apiLocale.value,

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     )
     if (res?.statusCode === 200) return res
   } catch (e) {
-    console.error('[/api/locales] fetch failed:', e)
+    console.error('[/nuxt-api/locales] fetch failed:', e)
   }
 
   return { statusCode: 200, data: [] }
