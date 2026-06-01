@@ -6,10 +6,10 @@ export function resolveForwardHost(event: H3Event, hostOverride?: string) {
 
   const forwardedHost = getHeader(event, 'x-forwarded-host') || ''
   const host = getHeader(event, 'host') || ''
-  return (forwardedHost || host).split(',')[0].trim()
+  return ((forwardedHost || host).split(',')[0] || '').trim()
 }
 
 export function resolveDomain(event: H3Event, hostOverride?: string) {
   const host = resolveForwardHost(event, hostOverride)
-  return host.split(':')[0].trim().toLowerCase()
+  return (host.split(':')[0] || '').trim().toLowerCase()
 }
