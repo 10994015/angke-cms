@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const res = await $fetch<{ statusCode: number; data: any[] }>(
-      `${config.apiBase}/api/web-site/page/${slug}`,
+      `${config.apiBase}/web-site/page/${slug}`,
       {
         headers: { host },
         params: {

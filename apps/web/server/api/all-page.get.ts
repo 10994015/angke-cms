@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const res = await $fetch<{ statusCode: number; data: any[] }>(
-      `${config.apiBase}/api/web-site/all-page`,
+      `${config.apiBase}/web-site/all-page`,
       {
         headers: { host },
         params: {

@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const res = await $fetch<{ statusCode: number; data: any[] }>(
-      `${config.apiBase}/api/web-site/locale`,
+      `${config.apiBase}/web-site/locale`,
       {
         params: query.webSiteId ? { webSiteId: query.webSiteId } : undefined,
         timeout: 10000,
