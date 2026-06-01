@@ -1,13 +1,18 @@
 <template>
   <div class="site-page">
     <!-- Loading -->
-    <div v-if="pending" class="site-loading">
+    <div v-if="showInitialLoading" class="site-loading">
       <div class="site-spinner" />
     </div>
 
     <!-- Not found -->
     <div v-else-if="!siteData" class="site-error">
       <p>找不到網站</p>
+    </div>
+
+    <!-- Route page failed -->
+    <div v-else-if="showPageError" class="site-error">
+      <p>{{ pageErrorMessage }}</p>
     </div>
 
     <!-- Page content -->
@@ -93,11 +98,16 @@ const webSiteId = computed(() => siteData.value?.tenantId || undefined)
 // ── Locales (from /api/web-site/locale) ───────────────────────────────────────
 
 const { data: localesData } = await useAsyncData<any>(
-  'locales',
+  'locales-by-site',
   () => $fetch<any>(
     '/api/locales',
     { params: webSiteId.value ? { webSiteId: webSiteId.value } : undefined }
-  )
+  ),
+  {
+    watch: [webSiteId],
+    lazy: true,
+    default: () => ({ statusCode: 200, data: [] }),
+  }
 )
 
 const locales = computed<{ locale: string; urlCode: string; label: string }[]>(() => {
@@ -112,7 +122,7 @@ const locales = computed<{ locale: string; urlCode: string; label: string }[]>((
 // ── Page content ──────────────────────────────────────────────────────────────
 
 const { data: pageData, pending } = await useAsyncData<any>(
-  `page-${slug.value}-${apiLocale.value}`,
+  () => `page-by-route:${locale.value}:${slug.value}`,
   () => $fetch<any>(
     `/api/page/${slug.value}`,
     {
@@ -121,7 +131,19 @@ const { data: pageData, pending } = await useAsyncData<any>(
         ...(webSiteId.value ? { webSiteId: webSiteId.value } : {}),
       },
     }
-  )
+  ),
+  {
+    watch: [slug, apiLocale, webSiteId],
+    default: () => ({ statusCode: 500, data: { contentJson: [] } }),
+  }
+)
+
+const pageStatusCode = computed(() => Number(pageData.value?.statusCode || 500))
+const showPageError = computed(() => !pending.value && pageStatusCode.value !== 200)
+const pageErrorMessage = computed(() =>
+  pageStatusCode.value === 404
+    ? '找不到頁面'
+    : '頁面載入失敗，請重新整理或稍後再試'
 )
 
 const basemaps = computed<any[]>(() => {
@@ -130,6 +152,8 @@ const basemaps = computed<any[]>(() => {
   const content = d.data?.contentJson
   return Array.isArray(content) ? content : []
 })
+
+const showInitialLoading = computed(() => pending.value && basemaps.value.length === 0)
 
 // ── Frame type helpers ─────────────────────────────────────────────────────────
 
@@ -141,7 +165,7 @@ const isFooterFrame = (frame: any) => FOOTER_TYPES.has(frame?.type)
 // ── All-page tree (public API, used for navbar tabs + pre-loaded children) ────
 
 const { data: allPageData } = await useAsyncData<any>(
-  `all-page-${apiLocale.value}`,
+  'all-page-by-locale',
   () => $fetch<any>(
     '/api/all-page',
     {
@@ -150,7 +174,12 @@ const { data: allPageData } = await useAsyncData<any>(
         ...(webSiteId.value ? { webSiteId: webSiteId.value } : {}),
       },
     }
-  )
+  ),
+  {
+    watch: [apiLocale, webSiteId],
+    lazy: true,
+    default: () => ({ statusCode: 200, data: [] }),
+  }
 )
 
 // ── slug → 顯示名稱 對照表（從 all-page 樹狀遞迴建立）─────────────────────────
