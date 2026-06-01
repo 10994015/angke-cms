@@ -8,6 +8,11 @@ export default defineEventHandler(async (event) => {
   if (!config.apiBase) return null
 
   const host = resolveForwardHost(event, config.devHost)
+  const domain = host.split(':')[0]
+  const fallbackSite = {
+    tenantId: config.webSiteId || null,
+    tenantName: domain || '',
+  }
 
   try {
     const res = await $fetch<{ statusCode: number; data: Record<string, any> }>(
@@ -15,13 +20,13 @@ export default defineEventHandler(async (event) => {
       {
         headers: { host },
         params: config.webSiteId ? { webSiteId: config.webSiteId } : undefined,
-        timeout: 10000,
+        timeout: 3000,
       }
     )
     if (res?.statusCode === 200 && res?.data) return res.data
   } catch (e) {
-    console.error('[/api/site] fetch failed:', e)
+    console.warn('[/api/site] fetch failed, using fallback site data:', (e as Error)?.message || e)
   }
 
-  return null
+  return fallbackSite
 })
