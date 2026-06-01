@@ -7,6 +7,9 @@ export default defineNuxtConfig({
   ssr: true,
 
   vite: {
+    server: {
+      allowedHosts: ['angke.com.tw'],
+    },
     resolve: {
       alias: {
         '@angke/ui': fileURLToPath(new URL('../../packages/ui', import.meta.url)),
