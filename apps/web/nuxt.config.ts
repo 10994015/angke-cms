@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
   experimental: {
-    emitRouteChunkError: 'manual',
+    emitRouteChunkError: 'automatic-immediate',
   },
 
   vite: {
