@@ -7,7 +7,9 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "start:win": "node win-serve/install-serve.js",
+    "end:win": "node win-serve/uninstall-serve.js"
   },
   "dependencies": {
     "@angke/ui": "workspace:*",
