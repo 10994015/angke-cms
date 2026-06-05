@@ -5,7 +5,7 @@ const Service = nodeWindows.Service;
 const svc = new Service({
   name: 'Angke On Prem Nuxt Server', 
   description: '昂科資訊落第部屬解決方案應用程式伺服器 (Nuxt)', 
-  script: process.cwd() + '\\dist\\app.js',
+  script: process.cwd() + '\\.output\\server\\index.mjs',
 });
 
 

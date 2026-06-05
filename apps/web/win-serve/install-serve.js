@@ -5,7 +5,7 @@ const Service = nodeWindows.Service;
 const svc = new Service({
   name: 'Angke On Prem Nuxt Server', 
   description: '昂科資訊落第部屬解決方案應用程式伺服器 (Nuxt)', 
-  script: process.cwd() + '\\dist\\app.js',
+  script: process.cwd() + '\\.output\\server\\index.mjs',
   workingDirectory: process.cwd(),
   logpath: process.cwd() + '\\win-serve\\logs', 
   wait: 2, // 如果服務崩潰，嘗試等待重新啟動時間（秒）
