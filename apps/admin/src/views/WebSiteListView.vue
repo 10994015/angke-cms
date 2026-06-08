@@ -21,7 +21,7 @@ const subdomainWebsiteModel = ref(false)
 
 const fetchSubdomainModel = async () => {
   try {
-    const res = await axiosClient.get('/backend/web-site/subdomain-web-site-model')
+    const res = await axiosClient.get('/backend/web-site/subdomain-website-model')
     if (res.data.statusCode === 200 && res.data.data) {
       subdomainWebsiteModel.value = res.data.data.subdomainWebsiteModel === true
     }
@@ -192,10 +192,10 @@ const goPage = (p) => {
 }
 
 const goEditor = (site) => {
-  router.push(`/editor/${site.id}/page-editor`)
+  router.push(`/backend/editor/${site.id}/page-editor`)
 }
 
-const goPages = (site) => router.push(`/websites/${site.id}/pages`)
+const goPages = (site) => router.push(`/backend/websites/${site.id}/pages`)
 
 const zhTwFonts = [
   { value: 'ibm-plex-sans-tc',    label: 'IBM Plex Sans TC',    cssFamily: "'IBM Plex Sans TC', sans-serif" },

@@ -1,10 +1,11 @@
+import { resolveForwardHost } from '../utils/resolveForwardHost'
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   if (!config.apiBase) return { statusCode: 200, data: [] }
 
   const query       = getQuery(event)
-  const requestHost = getHeader(event, 'host') || ''
-  const host        = config.devHost || requestHost
+  const host        = resolveForwardHost(event, config.devHost)
 
   try {
     const res = await $fetch<{ statusCode: number; data: any[] }>(

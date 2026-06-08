@@ -8,8 +8,8 @@ const authStore = useAuthStore()
 
 setUnauthorizedHandler(() => {
   authStore.forceLogout()
-  if (router.currentRoute.value.path !== '/login') {
-    router.replace('/login')
+  if (router.currentRoute.value.path !== '/backend/login') {
+    router.replace('/backend/login')
   }
 })
 </script>

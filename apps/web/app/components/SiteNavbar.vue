@@ -194,7 +194,7 @@ const hasChildren  = (slug: string) => (childrenCache[slug]?.length ?? 0) > 0
 const ensureChildren = async (slug: string) => {
   if (slug in childrenCache) return
   try {
-    const res = await $fetch<any>(`/api/children/${slug}`, {
+    const res = await $fetch<any>(`/nuxt-api/children/${slug}`, {
       params: { locale: props.currentLocale.toUpperCase() },
     })
     if (res?.statusCode === 200 && Array.isArray(res.data)) {

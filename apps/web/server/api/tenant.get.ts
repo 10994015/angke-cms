@@ -1,9 +1,10 @@
+import { resolveDomain } from '../utils/resolveForwardHost'
+
 // Resolves tenantId from the incoming request's host header.
 // Calls the backend's domain-lookup endpoint; falls back to NUXT_TENANT_ID env var.
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const host   = getHeader(event, 'host') || ''
-  const domain = host.split(':')[0]  // strip port
+  const domain = resolveDomain(event, config.devHost)
 
   if (config.apiBase && domain) {
     try {

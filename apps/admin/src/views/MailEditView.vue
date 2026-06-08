@@ -1,16 +1,41 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import axiosClient from '@/axios'
 
 const router = useRouter()
+const route = useRoute()
 
-const mail     = history.state?.mail || null
-const id       = mail?.id
+const mail     = ref(null)
+const id       = route.params.id
 const error    = ref('')
+const loading  = ref(false)
 const deleting = ref(false)
 const testing  = ref(false)
+
+const fetchMail = async () => {
+  if (!id) {
+    router.replace('/backend/mail')
+    return
+  }
+
+  loading.value = true
+  error.value = ''
+
+  try {
+    const res = await axiosClient.get(`/backend/mail/${id}`)
+    if (res.data.statusCode === 200 && res.data.data) {
+      mail.value = res.data.data
+      return
+    }
+    error.value = res.data.message || '找不到寄信帳號資料'
+  } catch (err) {
+    error.value = err.response?.data?.message || err.message || '網路錯誤'
+  } finally {
+    loading.value = false
+  }
+}
 
 const formatDate = (iso) => {
   if (!iso) return '—'
@@ -18,6 +43,7 @@ const formatDate = (iso) => {
 }
 
 const handleSendTest = async () => {
+  if (!id) return
   testing.value = true
   error.value   = ''
   try {
@@ -35,13 +61,14 @@ const handleSendTest = async () => {
 }
 
 const handleDelete = async () => {
+  if (!id) return
   if (!confirm('確定要刪除此寄信帳號嗎？此操作無法復原。')) return
   deleting.value = true
   error.value    = ''
   try {
     const res = await axiosClient.delete(`/backend/mail/${id}`)
     if (res.data.statusCode === 200) {
-      router.push('/mail')
+      router.push('/backend/mail')
     } else {
       error.value = res.data.message || '刪除失敗'
     }
@@ -53,14 +80,14 @@ const handleDelete = async () => {
 }
 
 onMounted(() => {
-  if (!mail) router.replace('/mail')
+  fetchMail()
 })
 </script>
 
 <template>
   <AdminLayout title="寄信帳號詳情">
     <template #header-actions>
-      <button class="btn-back" @click="router.push('/mail')">
+      <button class="btn-back" @click="router.push('/backend/mail')">
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
           <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
         </svg>
@@ -68,7 +95,12 @@ onMounted(() => {
       </button>
     </template>
 
-    <div v-if="mail" class="detail-card">
+    <div v-if="loading" class="loading-state">
+      <div class="loading-spinner" />
+      <span>載入中...</span>
+    </div>
+
+    <div v-else-if="mail" class="detail-card">
       <!-- 帳號資訊 -->
       <div class="detail-section">
         <h3 class="section-title">帳號資訊</h3>
@@ -134,10 +166,42 @@ onMounted(() => {
         </button>
       </div>
     </div>
+
+    <div v-else class="empty-state">
+      <p class="empty-text">{{ error || '找不到寄信帳號資料' }}</p>
+      <button class="btn-back" @click="router.push('/backend/mail')">返回列表</button>
+    </div>
   </AdminLayout>
 </template>
 
 <style scoped lang="scss">
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 240px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #0891B2;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-text {
+  margin: 0;
+  font-size: 13px;
+}
+
 .btn-back {
   display: inline-flex;
   align-items: center;

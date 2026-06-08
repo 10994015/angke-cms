@@ -21,7 +21,7 @@ const getRedirectTarget = () => {
       return redirect
     }
   }
-  return '/dashboard'
+  return '/backend/dashboard'
 }
 
 const afterLogin = () => {
@@ -29,7 +29,7 @@ const afterLogin = () => {
   try {
     const url = new URL(target)
     if (url.origin !== window.location.origin) {
-      router.push('/dashboard')
+      router.push('/backend/dashboard')
       return
     }
   } catch {
@@ -52,7 +52,7 @@ const handleLogin = async () => {
     if (result.success) {
       if (result.statusCode === 202) {
         alert(result.data.firstLogin ? '首次登入需重設密碼！' : '密碼已過期，請重新設定密碼！')
-        router.push(`/init-password/${result.data.changePwToken}`)
+        router.push(`/backend/init-password/${result.data.changePwToken}`)
         return
       }
       afterLogin()
@@ -105,7 +105,7 @@ const handleLogin = async () => {
         <div class="form-field">
           <div class="label-row">
             <label class="form-label">密碼</label>
-            <a class="forgot-link" @click="router.push('/forgot-password')">忘記密碼？</a>
+            <a class="forgot-link" @click="router.push('/backend/forgot-password')">忘記密碼？</a>
           </div>
           <input
             v-model="loginForm.password"

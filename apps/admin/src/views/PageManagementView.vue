@@ -178,10 +178,10 @@ const fetchPages = async () => {
   }
 }
 
-const goBack = () => router.push('/websites')
+const goBack = () => router.push('/backend/websites')
 
 const handleEdit = (node) => {
-  router.push(`/editor/${siteId}/page-editor?page=${node.slug}`)
+  router.push(`/backend/editor/${siteId}/page-editor?page=${node.slug}`)
 }
 
 const handleDelete = async (node) => {

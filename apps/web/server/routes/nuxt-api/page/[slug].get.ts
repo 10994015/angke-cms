@@ -1,12 +1,12 @@
-import { resolveForwardHost } from '../../utils/resolveForwardHost'
+import { resolveForwardHost } from '../../../utils/resolveForwardHost'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   if (!config.apiBase) return { statusCode: 404, data: [] }
 
-  const slug        = getRouterParam(event, 'slug')
-  const query       = getQuery(event)
-  const host        = resolveForwardHost(event, config.devHost)
+  const slug = getRouterParam(event, 'slug')
+  const query = getQuery(event)
+  const host = resolveForwardHost(event, config.devHost)
 
   try {
     const res = await $fetch<{ statusCode: number; data: any[] }>(
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     )
     return res
   } catch (e: any) {
-    console.error(`[/api/page/${slug}] fetch failed:`, e?.message || e)
+    console.error(`[/nuxt-api/page/${slug}] fetch failed:`, e?.message || e)
   }
 
   return { statusCode: 404, data: [] }

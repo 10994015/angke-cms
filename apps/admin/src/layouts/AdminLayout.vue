@@ -10,7 +10,6 @@ defineProps({
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-
 const collapsed = ref(false)
 
 onMounted(() => {

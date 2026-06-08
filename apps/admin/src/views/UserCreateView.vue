@@ -3,7 +3,7 @@
     <div class="page-wrap">
       <div class="page-card">
 
-        <button class="back-link" @click="router.push('/users')">
+        <button class="back-link" @click="router.push('/backend/users')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           返回帳號管理
         </button>
@@ -72,7 +72,7 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-cancel" :disabled="loading || success" @click="router.push('/users')">
+            <button type="button" class="btn-cancel" :disabled="loading || success" @click="router.push('/backend/users')">
               取消
             </button>
             <button type="submit" class="btn-submit" :disabled="loading || success">
@@ -121,7 +121,7 @@ const handleSubmit = async () => {
     })
     if (response.status === 200 || response.status === 201) {
       success.value = true
-      setTimeout(() => router.push('/users'), 1500)
+      setTimeout(() => router.push('/backend/users'), 1500)
     } else {
       errorMsg.value = response.data?.message || '建立失敗，請稍後再試'
     }
