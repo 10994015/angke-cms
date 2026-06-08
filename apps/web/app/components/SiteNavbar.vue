@@ -62,7 +62,7 @@
         <a class="pv-login-btn" :href="`${loginUrl}/login`">登入</a>
 
         <div v-if="locales.length >= 1" class="pv-locale-wrapper" @click.stop>
-          <button ref="localeBtnRef" class="pv-locale-btn" @click="localeMenuOpen = !localeMenuOpen">
+          <button ref="localeBtnRef" class="pv-locale-btn" @click="updateLocaleDropdownPos(); localeMenuOpen = !localeMenuOpen">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="2" y1="12" x2="22" y2="12"/>
@@ -374,7 +374,6 @@ const updateLocaleDropdownPos = () => {
   }
 }
 
-watch(localeMenuOpen, (open) => { if (open) nextTick(updateLocaleDropdownPos) })
 
 const handleOutsideClick = () => { localeMenuOpen.value = false; activeDropdown.value = null }
 onMounted(() => document.addEventListener('click', handleOutsideClick))

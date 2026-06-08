@@ -65,7 +65,7 @@
         <button class="pv-login-btn disabled">登入</button>
 
         <div v-if="localeOptions.length > 1" class="pv-locale-wrapper" @click.stop>
-          <button ref="localeBtnRef" class="pv-locale-btn" @click="localeMenuOpen = !localeMenuOpen">
+          <button ref="localeBtnRef" class="pv-locale-btn" @click="updateLocaleDropdownPos(); localeMenuOpen = !localeMenuOpen">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <line x1="2" y1="12" x2="22" y2="12"/>
@@ -408,16 +408,18 @@ const currentLocaleLabel = computed(() => {
   return found?.label || LOCALE_LABEL_MAP[store.currentLocale] || store.currentLocale || '繁中'
 })
 
-const dropdownStyle = computed(() => {
-  if (!localeBtnRef.value) return {}
+const dropdownStyle = ref({ position: 'fixed', zIndex: 99999, top: '-9999px', right: '0px' })
+
+const updateLocaleDropdownPos = () => {
+  if (!localeBtnRef.value) return
   const rect = localeBtnRef.value.getBoundingClientRect()
-  return {
+  dropdownStyle.value = {
     position: 'fixed',
+    zIndex: 99999,
     top:   rect.bottom + 8 + 'px',
     right: window.innerWidth - rect.right + 'px',
-    zIndex: 99999,
   }
-})
+}
 
 const handleLocaleChange = (locale) => {
   localeMenuOpen.value = false

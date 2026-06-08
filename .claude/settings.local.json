@@ -12,7 +12,9 @@
       "Bash(mkdir \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\assets\\\\css\" 2>/dev/null; mkdir \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\server\\\\api\" 2>/dev/null; mkdir \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\app\\\\pages\\\\[locale]\" 2>/dev/null; mkdir \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\app\\\\components\\\\elements\" 2>/dev/null; mkdir \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\app\\\\utils\" 2>/dev/null; echo \"dirs created\")",
       "Bash(pnpm install *)",
       "Bash(npx nuxt *)",
-      "Bash(del \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\server\\\\api\\\\tenant.get.ts\")"
+      "Bash(del \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\server\\\\api\\\\tenant.get.ts\")",
+      "Bash(dir /s /b \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\")",
+      "Bash(findstr /i \"NavbarBasemap\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\Desktop\\angke-cms\\apps\\web\\app\\pages"
