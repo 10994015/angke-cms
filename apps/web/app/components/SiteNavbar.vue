@@ -223,6 +223,7 @@ const populateFromTree = (nodes: any[]) => {
 }
 
 watch(() => props.pageTree, (tree) => {
+  Object.keys(childrenCache).forEach(k => delete childrenCache[k])
   if (tree?.length) populateFromTree(tree)
 }, { immediate: true })
 
@@ -434,9 +435,6 @@ onUnmounted(() => {
 
 /* Desktop dropdown wrapper：position/top/left 由 dropdownStyle 控制，
    translateX(-50%) 由 .ndm--portal 負責，這裡不能重複加 */
-.pv-nav-dropdown {
-  /* 純容器，無額外 transform */
-}
 
 .nav-dropdown-enter-active { transition: opacity 0.18s cubic-bezier(0.4,0,0.2,1); }
 .nav-dropdown-leave-active { transition: opacity 0.12s cubic-bezier(0.4,0,0.2,1); }

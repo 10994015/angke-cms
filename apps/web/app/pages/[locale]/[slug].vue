@@ -213,7 +213,7 @@ const isFooterFrame = (frame: any) => FOOTER_TYPES.has(frame?.type)
 // ── All-page tree (public API, used for navbar tabs + pre-loaded children) ────
 
 const { data: allPageData } = await useAsyncData<any>(
-  'all-page-by-locale',
+  () => `all-page:${apiLocale.value}:${webSiteId.value || ''}`,
   () => $fetch<any>(
     '/nuxt-api/all-page',
     {
@@ -224,7 +224,6 @@ const { data: allPageData } = await useAsyncData<any>(
     }
   ),
   {
-    watch: [apiLocale, webSiteId],
     lazy: true,
     default: () => ({ statusCode: 200, data: [] }),
   }

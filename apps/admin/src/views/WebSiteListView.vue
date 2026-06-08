@@ -231,7 +231,7 @@ const pageRange = computed(() => {
 
 const formatDate = (iso) => {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('zh-TW', { year: 'numeric', mo【nth: '2-digit', day: '2-digit' })
+  return new Date(iso).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
 onMounted(() => {
