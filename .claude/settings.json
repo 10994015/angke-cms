@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"gridRow\\\\|gridColumn\\\\|position\\\\|width\\\\|height\")",
+      "Bash(xargs grep -l \"FrameElementRenderer\")",
+      "Bash(xargs grep -l \"SiteElementRenderer\")",
+      "Bash(xargs grep -l \"currentDevice\\\\|desktop\\\\|tablet\\\\|mobile\")",
+      "Bash(xargs grep -l \"responsive\\\\|breakpoint\\\\|device\\\\|tablet\\\\|mobile\\\\|phone\\\\|pc\")",
+      "Bash(xargs grep -l \"device\\\\|responsive\\\\|breakpoint\")"
+    ]
+  }
+}

@@ -14,7 +14,8 @@
       "Bash(npx nuxt *)",
       "Bash(del \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\\\\web\\\\server\\\\api\\\\tenant.get.ts\")",
       "Bash(dir /s /b \"c:\\\\Users\\\\user\\\\Desktop\\\\angke-cms\\\\apps\")",
-      "Bash(findstr /i \"NavbarBasemap\")"
+      "Bash(findstr /i \"NavbarBasemap\")",
+      "Bash(xargs grep -l \"responsive\\\\|breakpoint\\\\|device\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\user\\Desktop\\angke-cms\\apps\\web\\app\\pages"
