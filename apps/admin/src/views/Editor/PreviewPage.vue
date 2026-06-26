@@ -42,9 +42,6 @@
             @click="store.switchLocale(loc.locale)"
           >{{ loc.label }}</button>
         </div>
-
-        <!-- 登入（示意） -->
-        <button class="btn-login" disabled>登入</button>
       </div>
     </header>
 
@@ -202,7 +199,6 @@ onUnmounted(() => {
 .locale-btn { padding: 4px 10px; border: none; border-radius: 5px; background: transparent; color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: inherit; white-space: nowrap; }
 .locale-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
 .locale-btn.active { background: rgba(255,255,255,0.2); color: #fff; }
-.btn-login { padding: 6px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; background: transparent; color: rgba(255,255,255,0.5); font-size: 13px; cursor: not-allowed; opacity: 0.6; font-family: inherit; white-space: nowrap; }
 
 /* State overlay */
 .state-overlay { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 14px; color: #6b7280; }

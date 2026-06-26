@@ -79,6 +79,15 @@ export const getCellCount = (frameType) => {
   return FRAME_CELL_COUNT[layout] ?? 1
 }
 
+// 後端 enum：數字款是 FRAME1_2（FRAME 後無底線）、複合款是 FRAME_A（有底線）。
+// 前端歷史上把數字款存成 FRAME_1_2（多一個底線），這裡統一轉成後端接受的格式。
+// 系統框架（非 FRAME 開頭，如 CAROUSEL_WALL）原樣保留。
+export const toBackendFrameType = (frameType) => {
+  if (!frameType || !frameType.startsWith('FRAME')) return frameType
+  const layout = parseFrameLayout(frameType)       // '1_2' 或 'A'
+  return /^[A-D]$/.test(layout) ? `FRAME_${layout}` : `FRAME${layout}`
+}
+
 const createDefaultPadding = () => ({
   pc:     { top: 20, right: 20, bottom: 20, left: 20 },
   tablet: { top: 20, right: 20, bottom: 20, left: 20 },
@@ -88,6 +97,17 @@ const createDefaultPadding = () => ({
 const createDefaultMetadata = () => ({
   color: null, fontSize: null, fontWeight: null, textAlign: null,
   width: null, height: null, backgroundColor: null,
+})
+
+// 空格子的序列化表示：後端會逐一讀 element.type，遇到 null 會 500
+// （Cannot read properties of null (reading 'type')），所以空格子要送出一個
+// type 為 null 的空元素物件，而非 null。前端以 !element.type 判斷空格，行為不變。
+const createEmptyElement = () => ({
+  type: null,
+  value: {},
+  metadata: createDefaultMetadata(),
+  padding: createDefaultPadding(),
+  width: null,
 })
 
 export const usePageEditorStore = defineStore('pageEditor', () => {
@@ -202,13 +222,16 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       if (!Array.isArray(basemap.frames)) basemap.frames = []
       basemap.frames = basemap.frames.filter(Boolean).map(frame => {
         if (!frame.data) frame.data = {}
+        // 統一框架 type 為後端 enum 格式（修正數字款多餘的底線）
+        frame.type = toBackendFrameType(frame.type)
         const isSystemFrame = frame.type && !frame.type.startsWith('FRAME')
         if (!isSystemFrame) {
           const count = getCellCount(frame.type)
-          if (!Array.isArray(frame.elements)) frame.elements = Array(count).fill(null)
-          while (frame.elements.length < count) frame.elements.push(null)
+          if (!Array.isArray(frame.elements)) frame.elements = []
+          // 不送 null（後端逐一讀 element.type，遇 null 會 500）。
+          // 空格子改送 type 為 null 的空元素物件，保留陣列位置 = 格子位置。
           frame.elements = frame.elements.map(el => {
-            if (!el) return null
+            if (!el || !el.type) return createEmptyElement()
             if (!el.value) el.value = {}
             if (!el.metadata) el.metadata = createDefaultMetadata()
             if (el.padding && el.padding.pc === undefined) {
@@ -219,6 +242,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
             if (!el.padding) el.padding = createDefaultPadding()
             return el
           })
+          while (frame.elements.length < count) frame.elements.push(createEmptyElement())
         } else if (!Array.isArray(frame.elements)) {
           frame.elements = []
         }
@@ -330,7 +354,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
 
   // ==================== Frame 操作 ====================
 
-  const addCustomFrame = (basemap, frameType = 'FRAME_1_1') => {
+  const addCustomFrame = (basemap, frameType = 'FRAME1_1') => {
     if (!basemap) return null
     if (!Array.isArray(basemap.frames)) basemap.frames = []
     const count = getCellCount(frameType)

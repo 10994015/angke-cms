@@ -202,6 +202,9 @@ const handleSave = async () => {
 const handlePublish = async () => {
   if (!store.tenantId) { showToast('示範模式無法發布', 'info'); return }
   if (!confirm('確定要發布嗎？發布後將更新線上網站。')) return
+  // 發布前先存草稿，存成功才發布，避免發布到舊內容
+  const saved = await store.saveCurrentPage()
+  if (!saved) { showToast(store.error || '儲存草稿失敗，已取消發布', 'error'); return }
   const ok = await store.publishWebsite(store.tenantId, store.currentLocale)
   if (ok) { showToast('發布成功！') }
   else { showToast(store.error || '發布失敗', 'error') }

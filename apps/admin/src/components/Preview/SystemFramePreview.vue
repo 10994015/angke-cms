@@ -141,6 +141,52 @@
       </div>
     </footer>
 
+    <!-- ── CAROUSEL_WALL（鏡像前台 SiteCarouselWall） ── -->
+    <section v-else-if="isCarouselWall" class="pv-cw" :style="cwHeroStyle">
+      <div class="pv-cw-viewport">
+        <div
+          v-for="(slide, index) in cwSlides"
+          :key="index"
+          class="pv-cw-slide"
+          :class="{ active: cwCurrent === index }"
+        >
+          <img :src="slide.image" :alt="slide.title || '輪播圖片'" class="pv-cw-img" />
+          <div class="pv-cw-overlay" :style="cwOverlayStyle(slide)" />
+          <div v-if="slide.title || slide.subtitle" class="pv-cw-text">
+            <h2 v-if="slide.title" class="pv-cw-title" :style="cwTitleStyle(slide)">{{ slide.title }}</h2>
+            <p v-if="slide.subtitle" class="pv-cw-subtitle" :style="cwSubtitleStyle(slide)">{{ slide.subtitle }}</p>
+          </div>
+        </div>
+
+        <template v-if="cwSlides.length > 1">
+          <button class="pv-cw-btn prev" @click.stop="cwPrev">‹</button>
+          <button class="pv-cw-btn next" @click.stop="cwNext">›</button>
+          <div class="pv-cw-pagination">
+            <button
+              v-for="(_, index) in cwSlides"
+              :key="index"
+              class="pv-cw-dot"
+              :class="{ active: cwCurrent === index }"
+              @click.stop="cwGo(Number(index))"
+            />
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- ── FIRST_PICTURE（鏡像前台 SiteHeroBanner） ── -->
+    <div v-else-if="isFirstPicture" class="pv-hero">
+      <div class="pv-hero-container" :style="heroStyle">
+        <div class="pv-hero-overlay" :style="heroOverlayStyle" />
+        <div class="pv-hero-content">
+          <div class="pv-hero-textbox" :style="heroTextBoxStyle">
+            <h1 v-if="heroTitle" class="pv-hero-title" :style="heroTitleStyle">{{ heroTitle }}</h1>
+            <p v-if="heroSubtitle" class="pv-hero-subtitle" :style="heroSubtitleStyle">{{ heroSubtitle }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── 其他系統區塊 ── -->
     <div v-else class="sys-placeholder">
       <span class="sys-placeholder-label">系統區塊・{{ frameType }}</span>
@@ -150,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   frameType:       { type: String, required: true },
@@ -169,6 +215,8 @@ const FOOTER_TYPES = ['FOOTER', 'PV_FOOTER']
 
 const isHeader = computed(() => HEADER_TYPES.includes(props.frameType))
 const isFooter = computed(() => FOOTER_TYPES.includes(props.frameType))
+const isCarouselWall = computed(() => props.frameType === 'CAROUSEL_WALL')
+const isFirstPicture = computed(() => props.frameType === 'FIRST_PICTURE')
 const isMobile = computed(() => props.device === 'mobile')
 
 const mobileOpen   = ref(false)
@@ -215,8 +263,82 @@ const onLocaleChange = (locale) => {
 }
 
 const handleOutsideClick = () => { localeMenuOpen.value = false }
-onMounted(()   => document.addEventListener('click', handleOutsideClick))
-onUnmounted(() => document.removeEventListener('click', handleOutsideClick))
+onMounted(()   => { document.addEventListener('click', handleOutsideClick); cwStart() })
+onUnmounted(() => { document.removeEventListener('click', handleOutsideClick); cwStop() })
+
+// ── Carousel Wall（鏡像前台 SiteCarouselWall.vue） ─────────────────────────────
+
+const cwHeroStyle = computed(() => {
+  const h = props.frameData.carouselWallHeight ?? 600
+  const val = typeof h === 'number' || /^\d+$/.test(String(h)) ? h + 'px' : String(h)
+  return { height: val }
+})
+
+const cwNormalized = computed(() => {
+  const imgs = props.frameData.caroiselWallImgs
+  if (!imgs?.length) return []
+  return imgs.map(item => ({
+    image:            item.desktopSrc || item.tabletSrc || item.mobileSrc,
+    title:            item.title || '',
+    subtitle:         item.subtitle || '',
+    overlayOpacity:   item.overlayOpacity ?? 40,
+    overlayColor:     item.overlayColor || '#000000',
+    titleColor:       item.titleColor || '#ffffff',
+    titleFontSize:    item.titleFontSize ?? 48,
+    subtitleColor:    item.subtitleColor || '#eeeeee',
+    subtitleFontSize: item.subtitleFontSize ?? 20,
+  }))
+})
+
+const CW_PLACEHOLDER = [
+  { image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&h=600&fit=crop', title: '創新科技，引領未來', subtitle: 'Innovate · Transform · Lead', overlayOpacity: 40, overlayColor: '#000', titleColor: '#fff', titleFontSize: 48, subtitleColor: '#eee', subtitleFontSize: 20 },
+]
+
+const cwSlides = computed(() => cwNormalized.value.length ? cwNormalized.value : CW_PLACEHOLDER)
+
+const cwOverlayStyle  = (s) => ({ backgroundColor: s.overlayColor, opacity: s.overlayOpacity / 100 })
+const cwTitleStyle    = (s) => ({ color: s.titleColor, fontSize: s.titleFontSize + 'px' })
+const cwSubtitleStyle = (s) => ({ color: s.subtitleColor, fontSize: s.subtitleFontSize + 'px' })
+
+const cwCurrent = ref(0)
+let cwTimer = null
+
+const cwNext = () => { cwCurrent.value = (cwCurrent.value + 1) % cwSlides.value.length }
+const cwPrev = () => { cwCurrent.value = cwCurrent.value === 0 ? cwSlides.value.length - 1 : cwCurrent.value - 1 }
+const cwGo   = (i) => { cwCurrent.value = i }
+
+const cwStart = () => {
+  cwStop()
+  if (isCarouselWall.value && cwSlides.value.length > 1 && props.frameData.carouselWallAutoPlay !== false) {
+    cwTimer = setInterval(cwNext, props.frameData.carouselWallInterval || 5000)
+  }
+}
+const cwStop = () => { if (cwTimer) { clearInterval(cwTimer); cwTimer = null } }
+
+watch(cwNormalized, () => { cwCurrent.value = 0; cwStart() })
+
+// ── First Picture / Hero（鏡像前台 SiteHeroBanner.vue） ────────────────────────
+
+const HERO_PLACEHOLDER_BG = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&h=600&fit=crop'
+
+const heroFd = (camel, snake, fallback) => {
+  const val = props.frameData[camel] ?? props.frameData[snake]
+  return val !== undefined && val !== null ? val : fallback
+}
+
+const heroBg       = computed(() => props.frameData.heroBgImgSrc ?? props.frameData.hero_bg_img_src ?? HERO_PLACEHOLDER_BG)
+const heroTitle    = computed(() => props.frameData.heroTitle ?? props.frameData.hero_title ?? '')
+const heroSubtitle = computed(() => props.frameData.heroSubtitle ?? props.frameData.hero_subtitle ?? '')
+const heroOverlayOpacity = computed(() => {
+  const v = props.frameData.overlayOpacity ?? props.frameData.overlay_opacity
+  return v != null ? v / 100 : 0.4
+})
+
+const heroStyle         = computed(() => ({ minHeight: heroFd('heroHeight', 'hero_height', '600px'), backgroundImage: `url(${heroBg.value})` }))
+const heroOverlayStyle  = computed(() => ({ backgroundColor: heroFd('overlayColor', 'overlay_color', '#000000'), opacity: heroOverlayOpacity.value }))
+const heroTextBoxStyle  = computed(() => ({ backgroundColor: 'transparent', borderRadius: heroFd('textBoxBorderRadius', 'text_box_border_radius', '12px') }))
+const heroTitleStyle    = computed(() => ({ color: heroFd('titleColor', 'title_color', '#ffffff'), fontSize: heroFd('titleFontSize', 'title_font_size', '48px') }))
+const heroSubtitleStyle = computed(() => ({ color: heroFd('subtitleColor', 'subtitle_color', '#eeeeee'), fontSize: heroFd('subtitleFontSize', 'subtitle_font_size', '20px') }))
 
 // ── Footer ──────────────────────────────────────────────────────────────────
 
@@ -569,4 +691,70 @@ const footerBgStyle = computed(() => {
   border-radius: 20px;
   font-weight: 500;
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// CAROUSEL WALL  (mirrors apps/web SiteCarouselWall.vue)
+// ══════════════════════════════════════════════════════════════
+
+.pv-cw { position: relative; width: 100%; overflow: hidden; }
+.pv-cw-viewport { position: relative; width: 100%; height: 100%; }
+.pv-cw-slide {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+.pv-cw-slide.active { opacity: 1; z-index: 1; }
+.pv-cw-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pv-cw-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.pv-cw-text {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 40px 20px; pointer-events: none;
+}
+.pv-cw-title { margin: 0 0 16px; font-weight: 700; line-height: 1.2; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+.pv-cw-subtitle { margin: 0; line-height: 1.6; text-shadow: 0 1px 8px rgba(0,0,0,0.5); max-width: 720px; }
+.pv-cw-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 10; background: rgba(255,255,255,0.3); border: none;
+  width: 50px; height: 50px; border-radius: 50%; cursor: pointer;
+  font-size: 24px; color: #fff; display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s; backdrop-filter: blur(10px);
+  &:hover { background: rgba(255,255,255,0.5); transform: translateY(-50%) scale(1.1); }
+  &.prev { left: 2rem; }
+  &.next { right: 2rem; }
+}
+.pv-cw-pagination {
+  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 12px;
+}
+.pv-cw-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: rgba(255,255,255,0.4); border: none; cursor: pointer;
+  transition: all 0.3s; padding: 0;
+  &:hover { background: rgba(255,255,255,0.6); }
+  &.active { background: #fff; width: 30px; border-radius: 6px; }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// FIRST PICTURE / HERO  (mirrors apps/web SiteHeroBanner.vue)
+// ══════════════════════════════════════════════════════════════
+
+.pv-hero { width: 100%; position: relative; }
+.pv-hero-container {
+  position: relative; width: 100%; min-height: 600px;
+  display: flex; align-items: center; justify-content: center;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  overflow: hidden;
+}
+.pv-hero-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.pv-hero-content {
+  position: relative; z-index: 2; width: 100%; max-width: 1200px;
+  padding: 0 40px; display: flex; align-items: center; justify-content: center;
+}
+.pv-hero-textbox { background: transparent; padding: 60px 80px; border-radius: 12px; text-align: center; max-width: 800px; width: 100%; }
+.pv-hero-title { font-size: 48px; font-weight: 700; color: #fff; margin: 0 0 20px; line-height: 1.2; }
+.pv-hero-subtitle { font-size: 20px; color: #eee; margin: 0; line-height: 1.6; }
 </style>

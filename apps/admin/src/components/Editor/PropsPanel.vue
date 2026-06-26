@@ -838,7 +838,7 @@ const handleCarouselWallUpload = async (e) => {
   if (result) {
     if (!frame.data) frame.data = {}
     if (!Array.isArray(frame.data.caroiselWallImgs)) frame.data.caroiselWallImgs = []
-    frame.data.caroiselWallImgs.push({ desktopSrc: result.fileUrl, desktopImgId: result.id, title: '', subtitle: '' })
+    frame.data.caroiselWallImgs.push({ desktopSrc: result.fileUrl, desktopImgId: result.id, title: '', subtitle: '', overlayOpacity: 40 })
   }
   carouselWallUploading.value = false
   e.target.value = ''

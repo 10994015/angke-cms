@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import TextElement      from '@angke/ui/components/elements/TextElement.vue'
 import ImageElement     from '@angke/ui/components/elements/ImageElement.vue'
 import ButtonElement    from '@angke/ui/components/elements/ButtonElement.vue'
@@ -36,9 +37,19 @@ const props = defineProps<{
   cellIndex: number
 }>()
 
+const route            = useRoute()
+const locale           = computed(() => String(route.params.locale || '').toLowerCase())
+
 const isEmpty          = computed(() => !props.element || !props.element.type)
 const type             = computed(() => props.element?.type)
-const val              = computed(() => props.element?.value    || {})
+const val              = computed(() => {
+  const raw = props.element?.value || {}
+  // 站內頁面連結（存成 /slug）補上目前語系前綴 → /zh-tw/slug
+  if (raw.linkType === 'page' && typeof raw.link === 'string' && raw.link.startsWith('/') && locale.value) {
+    return { ...raw, link: `/${locale.value}${raw.link}` }
+  }
+  return raw
+})
 const meta             = computed(() => props.element?.metadata || {})
 const currentComponent = computed(() => ELEMENT_MAP[type.value ?? ''] ?? null)
 </script>

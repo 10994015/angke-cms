@@ -178,16 +178,16 @@ const ADVANCED_ELEMENTS = [
 ]
 
 const SINGLE_ROW_FRAMES = [
-  { type: 'FRAME_1_1', label: '1 欄', cols: 1, previewClass: '' },
-  { type: 'FRAME_1_2', label: '2 欄', cols: 2, previewClass: '' },
-  { type: 'FRAME_1_3', label: '3 欄', cols: 3, previewClass: '' },
-  { type: 'FRAME_1_4', label: '4 欄', cols: 4, previewClass: '' },
+  { type: 'FRAME1_1', label: '1 欄', cols: 1, previewClass: '' },
+  { type: 'FRAME1_2', label: '2 欄', cols: 2, previewClass: '' },
+  { type: 'FRAME1_3', label: '3 欄', cols: 3, previewClass: '' },
+  { type: 'FRAME1_4', label: '4 欄', cols: 4, previewClass: '' },
 ]
 
 const DOUBLE_ROW_FRAMES = [
-  { type: 'FRAME_2_2', label: '2×2', cols: 2 },
-  { type: 'FRAME_2_3', label: '2×3', cols: 3 },
-  { type: 'FRAME_2_4', label: '2×4', cols: 4 },
+  { type: 'FRAME2_2', label: '2×2', cols: 2 },
+  { type: 'FRAME2_3', label: '2×3', cols: 3 },
+  { type: 'FRAME2_4', label: '2×4', cols: 4 },
 ]
 
 const COMPOSITE_FRAMES = [

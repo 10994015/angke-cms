@@ -83,7 +83,7 @@ const normalizedSlides = computed(() => {
       image:            getDeviceSrc(item, 'desktop'),
       title:            item.title || '',
       subtitle:         item.subtitle || '',
-      overlayOpacity:   item.overlayOpacity ?? 0,
+      overlayOpacity:   item.overlayOpacity ?? 40,
       overlayColor:     item.overlayColor || '#000000',
       titleColor:       item.titleColor || '#ffffff',
       titleFontSize:    item.titleFontSize ?? 48,

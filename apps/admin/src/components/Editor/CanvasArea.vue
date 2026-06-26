@@ -178,7 +178,7 @@ const onBasemapDrop = (event, bIdx) => {
   }
 
   if (data.dragType === 'frame') {
-    store.addCustomFrame(store.currentPageBasemaps[bIdx], data.frameType || 'FRAME_1_1')
+    store.addCustomFrame(store.currentPageBasemaps[bIdx], data.frameType || 'FRAME1_1')
     return
   }
 
@@ -191,7 +191,7 @@ const onBasemapDrop = (event, bIdx) => {
     const apiType = SIDEBAR_TO_API[data.type] || data.type?.toUpperCase()
     const basemap = store.currentPageBasemaps[bIdx]
     if (!basemap.frames?.length) {
-      const frame = store.addCustomFrame(basemap, 'FRAME_1_1')
+      const frame = store.addCustomFrame(basemap, 'FRAME1_1')
       if (frame) store.addElementToCell(frame, 0, apiType)
     } else {
       const lastFrame = basemap.frames[basemap.frames.length - 1]
@@ -213,7 +213,7 @@ const onEmptyCanvasDrop = (event) => {
     if (basemap) store.addSystemFrame(basemap, data.type)
   } else if (data.dragType === 'frame') {
     const basemap = store.addBasemap()
-    if (basemap) store.addCustomFrame(basemap, data.frameType || 'FRAME_1_1')
+    if (basemap) store.addCustomFrame(basemap, data.frameType || 'FRAME1_1')
   }
 }
 
@@ -228,7 +228,7 @@ const onMoveBasemap = ({ fromIndex, direction }) => {
 // ── 新增第一個區塊 ──
 const addFirstSection = () => {
   const basemap = store.addBasemap()
-  if (basemap) store.addCustomFrame(basemap, 'FRAME_1_1')
+  if (basemap) store.addCustomFrame(basemap, 'FRAME1_1')
 }
 </script>
 
