@@ -21,7 +21,7 @@
     </component>
     <!-- 僅編輯器顯示上傳提示：預設圖 + 半透明黑遮罩 -->
     <div v-if="!val.src && editorHint" class="img-upload-overlay">
-      <img src="/images/default.png" class="img-upload-bg" alt="" />
+      <img :src="defaultImg" class="img-upload-bg" alt="" />
       <div class="img-upload-mask">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -43,6 +43,9 @@ const props = defineProps<{
   meta?:      Record<string, any>
   editorHint?: boolean
 }>()
+
+// 編輯器上傳提示底圖：用變數綁定（而非靜態 src），避免打包器把 public 路徑當 import 解析
+const defaultImg = '/images/default.png'
 
 // 前台且有設定連結時，才包超連結（編輯器內不導頁，方便選取編輯）
 const hasLink = computed(() => !props.editorHint && !!props.val.src && !!props.val.link)
