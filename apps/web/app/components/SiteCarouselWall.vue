@@ -1,5 +1,5 @@
 <template>
-  <section class="hero" :style="heroStyle">
+  <section class="hero">
     <div class="hero-swiper">
       <div class="swiper-wrapper">
         <div
@@ -38,12 +38,6 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps<{ frameData: Record<string, any> }>()
-
-const heroStyle = computed(() => {
-  const h = props.frameData.carouselWallHeight ?? 600
-  const val = typeof h === 'number' || /^\d+$/.test(String(h)) ? h + 'px' : String(h)
-  return { height: val }
-})
 
 const normalizedSlides = computed(() => {
   const imgs = props.frameData.caroiselWallImgs
@@ -93,11 +87,13 @@ onUnmounted(stop)
 
 <style scoped>
 .hero { position: relative; width: 100%; overflow: hidden; }
-.hero-swiper { position: relative; width: 100%; height: 100%; }
-.swiper-wrapper { position: relative; width: 100%; height: 100%; }
-.swiper-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.8s ease-in-out; }
-.swiper-slide.active { opacity: 1; z-index: 1; }
-.slide-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-swiper { position: relative; width: 100%; }
+.swiper-wrapper { position: relative; width: 100%; }
+/* 作用中的 slide 改回 in-flow 撐出高度，其餘絕對定位淡出疊在後面；
+   圖片 height:auto 照比例縮放、不裁切 */
+.swiper-slide { position: absolute; top: 0; left: 0; width: 100%; opacity: 0; transition: opacity 0.8s ease-in-out; }
+.swiper-slide.active { position: relative; opacity: 1; z-index: 1; }
+.slide-image { width: 100%; height: auto; display: block; }
 .slide-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .slide-text-content {
   position: absolute; inset: 0; z-index: 3;

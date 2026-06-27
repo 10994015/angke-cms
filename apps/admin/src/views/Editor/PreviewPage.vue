@@ -61,7 +61,7 @@
     <div v-else class="preview-area" :class="`preview-area--${device}`">
       <div class="device-frame" :class="`device-frame--${device}`">
         <div ref="screenRef" class="device-screen">
-          <div class="page-content">
+          <div class="page-content" :style="siteFontStyle">
             <template v-for="(basemap, bi) in store.basemaps" :key="`bm-${bi}`">
               <div class="basemap-block" :style="getBasemapStyle(basemap)">
                 <template v-for="(frame, fi) in basemap.frames" :key="`f-${fi}`">
@@ -107,9 +107,16 @@ import { useRoute } from 'vue-router'
 import { usePreviewStore } from '@/stores/preview'
 import SystemFramePreview from '@/components/Preview/SystemFramePreview.vue'
 import CustomFramePreview from '@/components/Preview/CustomFramePreview.vue'
+import { resolveSiteFont } from '@angke/ui/utils/fonts.js'
 
 const route = useRoute()
 const store = usePreviewStore()
+
+// 全站字型：依網站設定 + 目前語系套用到整個預覽內容
+const siteFontStyle = computed(() => {
+  const family = resolveSiteFont(store.settings, store.currentLocale)
+  return family ? { fontFamily: family } : {}
+})
 
 const device    = ref('desktop')
 const screenRef = ref(null)
@@ -132,8 +139,11 @@ const pageTabs = computed(() => {
 
 // ── Basemap 背景樣式 ──
 const getBasemapStyle = (basemap) => {
-  const srcMap = { desktop: 'bgPcImgSrc', tablet: 'bgTabletImgSrc', mobile: 'bgPhoneImgSrc' }
-  const src = basemap[srcMap[device.value]] || basemap.bgPcImgSrc
+  const d = basemap.bgPcImgSrc, t = basemap.bgTabletImgSrc, m = basemap.bgPhoneImgSrc
+  // 裝置 fallback 串接：手機→平板→桌機；平板→桌機；桌機用自己
+  const src = device.value === 'mobile' ? (m || t || d)
+            : device.value === 'tablet' ? (t || d)
+            : d
   if (!src) return {}
   return { backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }
 }

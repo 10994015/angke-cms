@@ -17,7 +17,7 @@
       <div class="sk-footer" />
     </div>
 
-    <div class="device-wrapper" :class="`device-${store.currentDevice}`">
+    <div class="device-wrapper" :class="`device-${store.currentDevice}`" :style="siteFontStyle">
 
       <!-- 空畫布提示 -->
       <div
@@ -125,8 +125,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { usePageEditorStore } from '@/stores/pageEditor'
+import { resolveSiteFont } from '@angke/ui/utils/fonts.js'
 import CustomFrame from './CustomFrame.vue'
 import BasemapWrapper from './basemap/BasemapWrapper.vue'
 import NavbarBasemap from './basemap/NavbarBasemap.vue'
@@ -143,6 +144,12 @@ const isFooterBasemap = (basemap) =>
   FOOTER_TYPES.has(basemap?.bgType) || FOOTER_TYPES.has(basemap?.frames?.[0]?.type)
 
 const store = usePageEditorStore()
+
+// 全站字型：依網站設定 + 目前語系套用到整個畫布內容
+const siteFontStyle = computed(() => {
+  const family = resolveSiteFont(store.websiteSettings, store.currentLocale)
+  return family ? { fontFamily: family } : {}
+})
 
 // ── 拖曳進入 basemap ──
 const dragOverBasemapIdx = ref(null)

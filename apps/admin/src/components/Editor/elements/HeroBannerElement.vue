@@ -4,7 +4,8 @@
     :class="{ 'is-selected': isSelected, 'preview-mode': !isEditMode }"
     @click.stop="isEditMode ? handleClick() : null"
   >
-    <div class="hero-container" :style="heroStyle">
+    <div class="hero-container">
+      <img :src="backgroundImage" class="hero-bg-img" alt="" />
       <div class="hero-overlay" :style="overlayStyle"></div>
 
       <div class="hero-content">
@@ -59,7 +60,6 @@ const titleFontSize        = computed(() => fd('titleFontSize', 'title_font_size
 const subtitleColor        = computed(() => fd('subtitleColor', 'subtitle_color', '#eeeeee'))
 const subtitleFontSize     = computed(() => fd('subtitleFontSize', 'subtitle_font_size', '20px'))
 
-const heroStyle     = computed(() => ({ minHeight: fd('heroHeight', 'hero_height', '600px'), backgroundImage: `url(${backgroundImage.value})` }))
 const overlayStyle  = computed(() => ({ backgroundColor: overlayColor.value, opacity: overlayOpacity.value }))
 const textBoxStyle  = computed(() => ({ backgroundColor: 'transparent', borderRadius: textBoxBorderRadius.value }))
 const titleStyle    = computed(() => ({ color: titleColor.value, fontSize: titleFontSize.value }))
@@ -101,31 +101,36 @@ const subtitleStyle = computed(() => ({ color: subtitleColor.value, fontSize: su
   z-index: 10;
 }
 
+/* grid 疊層：圖片、遮罩、文字都放在同一格，容器高度＝圖片(依比例縮放)與文字較高者 */
 .hero-container {
   position: relative;
   width: 100%;
-  min-height: 600px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  display: grid;
   overflow: hidden;
 }
 
+/* 背景圖：照比例縮放、不裁切（高度跟著寬度走）。
+   align-self: start 避免被 grid 預設的 stretch 拉伸變形 */
+.hero-bg-img {
+  grid-area: 1 / 1;
+  align-self: start;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .hero-overlay {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
   pointer-events: none;
   z-index: 1;
 }
 
 .hero-content {
-  position: relative;
+  grid-area: 1 / 1;
   z-index: 2;
   width: 100%;
   max-width: 1200px;
+  justify-self: center;
   padding: 0 40px;
   display: flex;
   align-items: center;
@@ -151,14 +156,12 @@ const subtitleStyle = computed(() => ({ color: subtitleColor.value, fontSize: su
   .hero-subtitle { font-size: 18px; }
 }
 @media (max-width: 768px) {
-  .hero-container { min-height: 500px; }
   .hero-content { padding: 0 20px; }
   .text-box { padding: 40px 30px; }
   .hero-title { font-size: 32px; margin-bottom: 16px; }
   .hero-subtitle { font-size: 16px; }
 }
 @media (max-width: 480px) {
-  .hero-container { min-height: 400px; }
   .text-box { padding: 30px 20px; }
   .hero-title { font-size: 24px; margin-bottom: 12px; }
   .hero-subtitle { font-size: 14px; }

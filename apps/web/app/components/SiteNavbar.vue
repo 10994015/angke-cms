@@ -160,8 +160,9 @@ const defaultSlug = config.public.defaultSlug
 const loginUrl    = config.public.loginUrl
 
 // ── Mobile / resize ───────────────────────────────────────────────────────────
-const isMobile = ref(false)
-const updateMobile = () => { isMobile.value = window.innerWidth <= 768 }
+const navViewportWidth = ref(1280)
+const isMobile = computed(() => navViewportWidth.value <= 768)
+const updateMobile = () => { navViewportWidth.value = window.innerWidth }
 onMounted(() => {
   updateMobile()
   window.addEventListener('resize', updateMobile)
@@ -173,14 +174,17 @@ const mobileOpen = ref(false)
 // ── Logo / bg ─────────────────────────────────────────────────────────────────
 const logoSrc = computed(() => props.frameData.logoImgUrl || props.frameData.logoImgSrc || null)
 
+// 背景圖改用 CSS 變數 + media query 切換（SSR 友善、無閃爍），fallback 烤進變數值。
+// 串接：手機→平板→桌機；平板→桌機；桌機用自己。
 const navbarBgStyle = computed(() => {
-  const bgImg = isMobile.value
-    ? (props.basemapBg?.mobile || props.basemapBg?.tablet || props.basemapBg?.desktop)
-    : props.basemapBg?.desktop
+  const d = props.basemapBg?.desktop, t = props.basemapBg?.tablet, m = props.basemapBg?.mobile
+  const toUrl = (v: any) => (v ? `url(${v})` : 'none')
   return {
-    backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || '#ffffff',
+    backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || 'transparent',
     color: props.frameData.navTextColor || props.frameData.textColor || '#333333',
-    ...(bgImg ? { backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
+    '--nav-bg-desktop': toUrl(d),
+    '--nav-bg-tablet':  toUrl(t || d),
+    '--nav-bg-mobile':  toUrl(m || t || d),
   }
 })
 
@@ -270,11 +274,27 @@ const updateDropdownPos = (slug: string) => {
 
 const onNavEnter = async (slug: string) => {
   if (closeTimer) { clearTimeout(closeTimer); closeTimer = null }
-  activeDropdown.value = slug
-  await nextTick()
+  // 先量好位置再顯示，避免下拉以「未定位」狀態 render 一瞬間掉到頁面流底部（飛很遠）
   updateDropdownPos(slug)
+  activeDropdown.value = slug
   await ensureChildren(slug)
+  await nextTick()
+  // 子項載入後尺寸可能變，重量一次確保置中正確
+  updateDropdownPos(slug)
 }
+
+// 開啟時隨捲動/縮放重新定位，讓下拉持續貼齊導航項
+const repositionDropdown = () => {
+  if (activeDropdown.value) updateDropdownPos(activeDropdown.value)
+}
+onMounted(() => {
+  window.addEventListener('scroll', repositionDropdown, { passive: true })
+  window.addEventListener('resize', repositionDropdown)
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', repositionDropdown)
+  window.removeEventListener('resize', repositionDropdown)
+})
 
 const onNavWrapperLeave = () => {
   closeTimer = setTimeout(() => { activeDropdown.value = null }, 150)
@@ -386,13 +406,22 @@ onUnmounted(() => {
 
 <style scoped>
 .pv-navbar {
-  background: #fff;
+  /* 背景色由 inline style 控制（預設 transparent）；背景圖用 CSS 變數依裝置切換 */
+  background-image: var(--nav-bg-desktop, none);
+  background-size: cover;
+  background-position: center;
   border-bottom: 1px solid #eee;
   padding: 0 2rem;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+@media (max-width: 1024px) {
+  .pv-navbar { background-image: var(--nav-bg-tablet, none); }
+}
+@media (max-width: 768px) {
+  .pv-navbar { background-image: var(--nav-bg-mobile, none); }
 }
 
 .pv-navbar-container {

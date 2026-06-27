@@ -9,12 +9,6 @@
         <div class="pv-logo-wrapper">
           <div class="pv-logo">
             <img v-if="logoSrc" :src="logoSrc" alt="Logo" class="pv-logo-image" />
-            <span v-else class="pv-logo-icon">
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <rect width="28" height="28" rx="6" fill="#0891B2"/>
-                <text x="14" y="20" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">宮</text>
-              </svg>
-            </span>
           </div>
         </div>
 
@@ -142,7 +136,7 @@
     </footer>
 
     <!-- ── CAROUSEL_WALL（鏡像前台 SiteCarouselWall） ── -->
-    <section v-else-if="isCarouselWall" class="pv-cw" :style="cwHeroStyle">
+    <section v-else-if="isCarouselWall" class="pv-cw">
       <div class="pv-cw-viewport">
         <div
           v-for="(slide, index) in cwSlides"
@@ -176,7 +170,8 @@
 
     <!-- ── FIRST_PICTURE（鏡像前台 SiteHeroBanner） ── -->
     <div v-else-if="isFirstPicture" class="pv-hero">
-      <div class="pv-hero-container" :style="heroStyle">
+      <div class="pv-hero-container">
+        <img :src="heroBg" class="pv-hero-bg-img" alt="" />
         <div class="pv-hero-overlay" :style="heroOverlayStyle" />
         <div class="pv-hero-content">
           <div class="pv-hero-textbox" :style="heroTextBoxStyle">
@@ -228,7 +223,7 @@ const localeBtnRef   = ref(null)
 const logoSrc = computed(() => props.frameData.logoImgSrc || null)
 
 const navbarBgStyle = computed(() => ({
-  backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || '#ffffff',
+  backgroundColor: props.frameData.navBgColor || props.frameData.bgColor || 'transparent',
   color: props.frameData.navTextColor || props.frameData.textColor || '#333333',
 }))
 
@@ -268,11 +263,6 @@ onUnmounted(() => { document.removeEventListener('click', handleOutsideClick); c
 
 // ── Carousel Wall（鏡像前台 SiteCarouselWall.vue） ─────────────────────────────
 
-const cwHeroStyle = computed(() => {
-  const h = props.frameData.carouselWallHeight ?? 600
-  const val = typeof h === 'number' || /^\d+$/.test(String(h)) ? h + 'px' : String(h)
-  return { height: val }
-})
 
 const cwNormalized = computed(() => {
   const imgs = props.frameData.caroiselWallImgs
@@ -334,7 +324,6 @@ const heroOverlayOpacity = computed(() => {
   return v != null ? v / 100 : 0.4
 })
 
-const heroStyle         = computed(() => ({ minHeight: heroFd('heroHeight', 'hero_height', '600px'), backgroundImage: `url(${heroBg.value})` }))
 const heroOverlayStyle  = computed(() => ({ backgroundColor: heroFd('overlayColor', 'overlay_color', '#000000'), opacity: heroOverlayOpacity.value }))
 const heroTextBoxStyle  = computed(() => ({ backgroundColor: 'transparent', borderRadius: heroFd('textBoxBorderRadius', 'text_box_border_radius', '12px') }))
 const heroTitleStyle    = computed(() => ({ color: heroFd('titleColor', 'title_color', '#ffffff'), fontSize: heroFd('titleFontSize', 'title_font_size', '48px') }))
@@ -698,15 +687,17 @@ const footerBgStyle = computed(() => {
 // ══════════════════════════════════════════════════════════════
 
 .pv-cw { position: relative; width: 100%; overflow: hidden; }
-.pv-cw-viewport { position: relative; width: 100%; height: 100%; }
+.pv-cw-viewport { position: relative; width: 100%; }
+/* 作用中的 slide 改回 in-flow（relative）來撐出容器高度，其餘絕對定位淡出疊在後面，
+   圖片用 height:auto 照比例縮放、不裁切 */
 .pv-cw-slide {
   position: absolute; inset: 0;
-  width: 100%; height: 100%;
+  width: 100%;
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
 }
-.pv-cw-slide.active { opacity: 1; z-index: 1; }
-.pv-cw-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pv-cw-slide.active { position: relative; opacity: 1; z-index: 1; }
+.pv-cw-img { width: 100%; height: auto; display: block; }
 .pv-cw-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .pv-cw-text {
   position: absolute; inset: 0; z-index: 3;
@@ -743,15 +734,12 @@ const footerBgStyle = computed(() => {
 // ══════════════════════════════════════════════════════════════
 
 .pv-hero { width: 100%; position: relative; }
-.pv-hero-container {
-  position: relative; width: 100%; min-height: 600px;
-  display: flex; align-items: center; justify-content: center;
-  background-size: cover; background-position: center; background-repeat: no-repeat;
-  overflow: hidden;
-}
-.pv-hero-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+/* grid 疊層：圖片照比例縮放不裁切，容器高度跟著圖片(或文字較高者)走 */
+.pv-hero-container { position: relative; width: 100%; display: grid; overflow: hidden; }
+.pv-hero-bg-img { grid-area: 1 / 1; align-self: start; width: 100%; height: auto; display: block; }
+.pv-hero-overlay { grid-area: 1 / 1; pointer-events: none; z-index: 1; }
 .pv-hero-content {
-  position: relative; z-index: 2; width: 100%; max-width: 1200px;
+  grid-area: 1 / 1; z-index: 2; width: 100%; max-width: 1200px; justify-self: center;
   padding: 0 40px; display: flex; align-items: center; justify-content: center;
 }
 .pv-hero-textbox { background: transparent; padding: 60px 80px; border-radius: 12px; text-align: center; max-width: 800px; width: 100%; }

@@ -160,8 +160,13 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
       const res = await axiosClient.get(`/backend/web-site/${tid}/locale`)
       if (res.data.statusCode === 200 && Array.isArray(res.data.data)) {
         locales.value = res.data.data
-        if (res.data.data.length && !currentLocale.value) {
-          currentLocale.value = res.data.data[0].locale
+        // 目前語系若不在本站語系清單內（例如預設 ZH-TW 但本站沒有），改用清單第一個，
+        // 否則後端會因 locale 不屬於本站而回 400
+        if (res.data.data.length) {
+          const available = res.data.data.map(l => l.locale)
+          if (!currentLocale.value || !available.includes(currentLocale.value)) {
+            currentLocale.value = res.data.data[0].locale
+          }
         }
         return res.data.data
       }

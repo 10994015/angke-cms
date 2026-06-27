@@ -105,7 +105,7 @@
                   <div class="upload-spinner" /> 上傳中...
                 </div>
                 <template v-else>
-                  <button class="btn-upload" @click="uploadImage('tablet')">{{ backgrounds.tablet ? '更換圖片' : '上傳圖片' }}</button>
+                  <button class="btn-upload" :disabled="!backgrounds.desktop" :title="!backgrounds.desktop ? '請先上傳桌面版' : ''" @click="uploadImage('tablet')">{{ backgrounds.tablet ? '更換圖片' : '上傳圖片' }}</button>
                   <button v-if="backgrounds.tablet" class="btn-clear" @click="clearBackground('tablet')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
@@ -128,7 +128,7 @@
                 <img v-if="backgrounds.mobile" :src="backgrounds.mobile" class="preview-img" />
                 <div v-else class="preview-empty">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  <span>同桌面版</span>
+                  <span>{{ backgrounds.tablet ? '同平板版' : '同桌面版' }}</span>
                 </div>
               </div>
               <div class="device-actions">
@@ -136,7 +136,7 @@
                   <div class="upload-spinner" /> 上傳中...
                 </div>
                 <template v-else>
-                  <button class="btn-upload" @click="uploadImage('mobile')">{{ backgrounds.mobile ? '更換圖片' : '上傳圖片' }}</button>
+                  <button class="btn-upload" :disabled="!backgrounds.desktop" :title="!backgrounds.desktop ? '請先上傳桌面版' : ''" @click="uploadImage('mobile')">{{ backgrounds.mobile ? '更換圖片' : '上傳圖片' }}</button>
                   <button v-if="backgrounds.mobile" class="btn-clear" @click="clearBackground('mobile')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
@@ -186,8 +186,16 @@ const desktopRequired = computed(() =>
   !backgrounds.value.desktop && (!!backgrounds.value.tablet || !!backgrounds.value.mobile)
 )
 
+// 裝置 fallback 串接：手機→平板→桌機；平板→桌機；桌機用自己
+const resolveBg = (device) => {
+  const b = backgrounds.value
+  if (device === 'mobile') return b.mobile || b.tablet || b.desktop
+  if (device === 'tablet') return b.tablet || b.desktop
+  return b.desktop
+}
+
 const bgStyle = computed(() => {
-  const src = backgrounds.value[store.currentDevice] || backgrounds.value.desktop
+  const src = resolveBg(store.currentDevice)
   if (!src) return {}
   return { backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }
 })
@@ -223,6 +231,11 @@ const applyUpload = (type, file) => {
 }
 
 const uploadImage = (type) => {
+  // 桌機一定要先上傳，平板/手機才能上傳
+  if (type !== 'desktop' && !backgrounds.value.desktop) {
+    alert('請先上傳桌面版背景圖片')
+    return
+  }
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
@@ -234,7 +247,6 @@ const uploadImage = (type) => {
       const result = await store.uploadImage(file)
       if (!result) { alert('上傳失敗，請重試'); return }
       applyUpload(type, result)
-      if (type !== 'desktop' && !backgrounds.value.desktop) applyUpload('desktop', result)
     } catch (err) {
       alert('上傳失敗：' + err.message)
     } finally {
@@ -563,6 +575,7 @@ const clearBackground = (type) => {
   white-space: nowrap;
   transition: background 0.15s;
   &:hover { background: #1e293b; }
+  &:disabled { background: #cbd5e1; color: #fff; cursor: not-allowed; }
 }
 
 .btn-clear {

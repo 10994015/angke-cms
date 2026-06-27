@@ -1,5 +1,5 @@
 <template>
-  <div class="site-page">
+  <div class="site-page" :style="siteFontStyle">
     <!-- Loading -->
     <div v-if="showInitialLoading" class="site-loading">
       <div class="site-spinner" />
@@ -33,7 +33,7 @@
     <!-- Page content -->
     <template v-else>
       <template v-for="(basemap, bi) in basemaps" :key="bi">
-        <div class="basemap-block" :style="getBasemapStyle(basemap)">
+        <div class="basemap-block" :style="getBasemapVars(basemap)">
           <template v-for="(frame, fi) in (basemap.frames || [])" :key="fi">
 
             <!-- Header -->
@@ -94,6 +94,8 @@
 </template>
 
 <script setup lang="ts">
+import { resolveSiteFont } from '@angke/ui/utils/fonts.js'
+
 const route = useRoute()
 
 const locale = computed(() => (route.params.locale as string).toLowerCase())
@@ -110,6 +112,12 @@ const { data: siteData } = await useAsyncData<Record<string, any> | null>(
 
 // webSiteId used in all API calls (backend uses Hostname in prod, but explicit ID is safer)
 const webSiteId = computed(() => siteData.value?.tenantId || undefined)
+
+// 全站字型：依網站設定 + 目前語系套用到整頁
+const siteFontStyle = computed(() => {
+  const family = resolveSiteFont(siteData.value, locale.value)
+  return family ? { fontFamily: family } : {}
+})
 
 // ── Locales (from /api/web-site/locale) ───────────────────────────────────────
 
@@ -268,10 +276,17 @@ const pageTree = computed(() => allPageData.value?.data || [])
 
 // ── Basemap background style ───────────────────────────────────────────────────
 
-const getBasemapStyle = (basemap: any) => {
-  const src = basemap.bgPcImgSrc
-  if (!src) return {}
-  return { backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+// 純 CSS 切換（SSR 友善、無閃爍、不依賴 JS）：把三個裝置的背景圖（含 fallback）
+// 烤成 CSS 變數，由 .basemap-block 的 media query 依視窗寬度挑用。
+// 串接：手機→平板→桌機；平板→桌機；桌機用自己。
+const getBasemapVars = (basemap: any) => {
+  const d = basemap.bgPcImgSrc, t = basemap.bgTabletImgSrc, m = basemap.bgPhoneImgSrc
+  const toUrl = (v: any) => (v ? `url(${v})` : 'none')
+  return {
+    '--bm-bg-desktop': toUrl(d),
+    '--bm-bg-tablet':  toUrl(t || d),
+    '--bm-bg-mobile':  toUrl(m || t || d),
+  }
 }
 
 // ── Scroll to top ──────────────────────────────────────────────────────────────
@@ -279,8 +294,12 @@ const getBasemapStyle = (basemap: any) => {
 const showScrollTop = ref(false)
 const onScroll   = () => { showScrollTop.value = window.scrollY > 300 }
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+})
 
 // ── SEO ────────────────────────────────────────────────────────────────────────
 
@@ -305,7 +324,17 @@ useSeoMeta({
 
 <style scoped>
 .site-page { min-height: 100vh; background: #fff; }
-.basemap-block { position: relative; width: 100%; background-size: cover; background-position: center; }
+.basemap-block {
+  position: relative; width: 100%;
+  background-image: var(--bm-bg-desktop, none);
+  background-size: cover; background-position: center;
+}
+@media (max-width: 1024px) {
+  .basemap-block { background-image: var(--bm-bg-tablet, none); }
+}
+@media (max-width: 768px) {
+  .basemap-block { background-image: var(--bm-bg-mobile, none); }
+}
 .site-loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 .site-spinner { width: 36px; height: 36px; border: 3px solid #e5e7eb; border-top-color: #0891B2; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

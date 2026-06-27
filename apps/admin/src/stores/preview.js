@@ -13,6 +13,7 @@ export const usePreviewStore = defineStore('preview', () => {
   const currentSlug  = ref('')
   const pageCache    = ref({})
   const basemaps     = ref([])
+  const settings     = ref(null)
 
   const hasMultipleLocales = computed(() => locales.value.length > 1)
 
@@ -21,8 +22,18 @@ export const usePreviewStore = defineStore('preview', () => {
   const init = async (tid, slug, locale) => {
     tenantId.value      = tid
     currentLocale.value = locale || 'ZH-TW'
-    await fetchLocales()
+    await Promise.all([fetchLocales(), fetchSettings()])
     await loadPage(slug)
+  }
+
+  // ── 網站設定（字型等）────────────────────────────────────────────────────────
+
+  const fetchSettings = async () => {
+    if (!tenantId.value) return
+    try {
+      const res = await axiosClient.get(`/backend/web-site/${tenantId.value}`)
+      if (res.data.statusCode === 200 && res.data.data) settings.value = res.data.data
+    } catch { /* 靜默失敗 */ }
   }
 
   // ── Locales ─────────────────────────────────────────────────────────────────
@@ -93,12 +104,13 @@ export const usePreviewStore = defineStore('preview', () => {
     currentSlug.value   = ''
     pageCache.value     = {}
     basemaps.value      = []
+    settings.value      = null
   }
 
   return {
     tenantId, isLoading, error,
     locales, currentLocale, hasMultipleLocales,
-    currentSlug, basemaps,
-    init, fetchLocales, switchLocale, loadPage, reset,
+    currentSlug, basemaps, settings,
+    init, fetchLocales, fetchSettings, switchLocale, loadPage, reset,
   }
 })
