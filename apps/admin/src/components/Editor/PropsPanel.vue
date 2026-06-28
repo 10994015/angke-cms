@@ -127,14 +127,6 @@
         <!-- CAROUSEL_WALL 設定 -->
         <template v-else-if="isCarouselWallFrame">
           <div class="prop-group">
-            <label class="prop-label">輪播高度</label>
-            <input type="number" class="prop-input" min="200" step="50"
-              :value="frameData.carouselWallHeight ?? 600"
-              @input="setFrameData('carouselWallHeight', +$event.target.value)"
-              placeholder="600"
-            />
-          </div>
-          <div class="prop-group">
             <div class="checkbox-list">
               <label>
                 <input type="checkbox" :checked="frameData.carouselWallAutoPlay ?? true" @change="setFrameData('carouselWallAutoPlay', $event.target.checked)" />

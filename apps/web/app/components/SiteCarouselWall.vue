@@ -86,14 +86,15 @@ onUnmounted(stop)
 </script>
 
 <style scoped>
-.hero { position: relative; width: 100%; overflow: hidden; }
-.hero-swiper { position: relative; width: 100%; }
-.swiper-wrapper { position: relative; width: 100%; }
-/* 作用中的 slide 改回 in-flow 撐出高度，其餘絕對定位淡出疊在後面；
-   圖片 height:auto 照比例縮放、不裁切 */
-.swiper-slide { position: absolute; top: 0; left: 0; width: 100%; opacity: 0; transition: opacity 0.8s ease-in-out; }
-.swiper-slide.active { position: relative; opacity: 1; z-index: 1; }
-.slide-image { width: 100%; height: auto; display: block; }
+/* 響應式高度：用 aspect-ratio 跟著視窗寬度等比縮放，平板/手機各自不同比例；淡入淡出 + cover 填滿 */
+.hero { position: relative; width: 100%; overflow: hidden; aspect-ratio: 1920 / 600; max-height: 600px; }
+.hero-swiper { position: relative; width: 100%; height: 100%; }
+.swiper-wrapper { position: relative; width: 100%; height: 100%; }
+.swiper-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; }
+.swiper-slide.active { opacity: 1; z-index: 1; }
+.slide-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (max-width: 1024px) { .hero { aspect-ratio: 1024 / 450; max-height: 450px; } }
+@media (max-width: 768px)  { .hero { aspect-ratio: 1 / 1; max-height: none; } }
 .slide-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .slide-text-content {
   position: absolute; inset: 0; z-index: 3;

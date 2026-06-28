@@ -2,27 +2,23 @@
   <section
     class="cwe-outer"
     :class="{ 'is-selected': isSelected }"
+    :style="containerStyle"
     @mouseenter="stopAutoPlay"
     @mouseleave="startAutoPlay"
     @click.stop="handleClick"
   >
     <div class="cwe-viewport">
       <div
-        class="cwe-track"
-        ref="trackRef"
-        :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
+        v-for="(slide, index) in displaySlides"
+        :key="index"
+        class="cwe-slide"
+        :class="{ 'cwe-slide--active': currentSlide === index }"
       >
-        <div
-          v-for="(slide, index) in displaySlides"
-          :key="index"
-          class="cwe-slide"
-        >
-          <img :src="slide.image" :alt="slide.title || '輪播圖片'" class="cwe-img" loading="lazy" />
-          <div class="cwe-overlay" :style="getOverlayStyle(slide)"></div>
-          <div v-if="slide.title || slide.subtitle" class="cwe-text">
-            <h2 v-if="slide.title" class="cwe-title" :style="getTitleStyle(slide)">{{ slide.title }}</h2>
-            <p v-if="slide.subtitle" class="cwe-subtitle" :style="getSubtitleStyle(slide)">{{ slide.subtitle }}</p>
-          </div>
+        <img :src="slide.image" :alt="slide.title || '輪播圖片'" class="cwe-img" loading="lazy" />
+        <div class="cwe-overlay" :style="getOverlayStyle(slide)"></div>
+        <div v-if="slide.title || slide.subtitle" class="cwe-text">
+          <h2 v-if="slide.title" class="cwe-title" :style="getTitleStyle(slide)">{{ slide.title }}</h2>
+          <p v-if="slide.subtitle" class="cwe-subtitle" :style="getSubtitleStyle(slide)">{{ slide.subtitle }}</p>
         </div>
       </div>
     </div>
@@ -53,11 +49,19 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { usePageEditorStore } from '@/stores/pageEditor'
+
+const store = usePageEditorStore()
+
+// 響應式尺寸：用 aspect-ratio 讓高度跟著寬度等比縮放，桌機/平板/手機各自不同比例與上限
+const containerStyle = computed(() => {
+  if (store.currentDevice === 'mobile') return { aspectRatio: '1 / 1' }
+  if (store.currentDevice === 'tablet') return { aspectRatio: '1024 / 450', maxHeight: '450px' }
+  return { aspectRatio: '1920 / 600', maxHeight: '600px' }
+})
 
 const PLACEHOLDER_SLIDES = [
-  { image: 'https://images.unsplash.com/photo-1548013146-72479768bada?w=1280&h=600&fit=crop', title: '', subtitle: '', overlayOpacity: 0, overlayColor: '#000000', titleColor: '#ffffff', titleFontSize: 48, subtitleColor: '#eeeeee', subtitleFontSize: 20 },
-  { image: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=1280&h=600&fit=crop', title: '', subtitle: '', overlayOpacity: 0, overlayColor: '#000000', titleColor: '#ffffff', titleFontSize: 48, subtitleColor: '#eeeeee', subtitleFontSize: 20 },
-  { image: 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=1280&h=600&fit=crop', title: '', subtitle: '', overlayOpacity: 0, overlayColor: '#000000', titleColor: '#ffffff', titleFontSize: 48, subtitleColor: '#eeeeee', subtitleFontSize: 20 },
+  { image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&h=600&fit=crop', title: '創新科技，引領未來', subtitle: 'Innovate · Transform · Lead', overlayOpacity: 40, overlayColor: '#000', titleColor: '#fff', titleFontSize: 48, subtitleColor: '#eee', subtitleFontSize: 20 },
 ]
 
 const props = defineProps({
@@ -132,6 +136,9 @@ onUnmounted(stopAutoPlay)
 .cwe-outer {
   position: relative;
   width: 100%;
+  /* 響應式高度（依寬度等比縮放）；實際比例由 :style(containerStyle) 依裝置覆寫 */
+  aspect-ratio: 1920 / 600;
+  max-height: 600px;
   user-select: none;
   cursor: pointer;
   transition: box-shadow 0.2s;
@@ -141,33 +148,30 @@ onUnmounted(stopAutoPlay)
 }
 
 .cwe-viewport {
+  position: relative;
   overflow: hidden;
   width: 100%;
+  height: 100%;
 }
 
-.cwe-track {
-  display: flex;
-  will-change: transform;
-  transition: transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
+/* 淡入淡出：slide 絕對定位疊在一起，靠 opacity 切換 */
 .cwe-slide {
-  flex: 0 0 100%;
-  min-width: 0;
-  position: relative;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+}
+.cwe-slide--active {
+  opacity: 1;
+  z-index: 1;
 }
 
-/* 關鍵：height: auto，完整展開，不裁切 */
+/* 鎖死高度下用 cover 填滿，不同比例的圖也一樣高 */
 .cwe-img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
-}
-
-/* 手機：直向顯示 */
-@media (max-width: 768px) {
-  .cwe-slide { aspect-ratio: 3 / 4; }
-  .cwe-img   { height: 100%; object-fit: cover; object-position: center; }
 }
 
 .cwe-overlay {

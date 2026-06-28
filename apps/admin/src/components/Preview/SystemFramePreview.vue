@@ -136,7 +136,7 @@
     </footer>
 
     <!-- ── CAROUSEL_WALL（鏡像前台 SiteCarouselWall） ── -->
-    <section v-else-if="isCarouselWall" class="pv-cw">
+    <section v-else-if="isCarouselWall" class="pv-cw" :style="cwContainerStyle">
       <div class="pv-cw-viewport">
         <div
           v-for="(slide, index) in cwSlides"
@@ -263,6 +263,12 @@ onUnmounted(() => { document.removeEventListener('click', handleOutsideClick); c
 
 // ── Carousel Wall（鏡像前台 SiteCarouselWall.vue） ─────────────────────────────
 
+// 響應式尺寸：用 aspect-ratio 讓高度跟著寬度等比縮放，桌機/平板/手機各自不同比例與上限
+const cwContainerStyle = computed(() => {
+  if (props.device === 'mobile') return { aspectRatio: '1 / 1' }
+  if (props.device === 'tablet') return { aspectRatio: '1024 / 450', maxHeight: '450px' }
+  return { aspectRatio: '1920 / 600', maxHeight: '600px' }
+})
 
 const cwNormalized = computed(() => {
   const imgs = props.frameData.caroiselWallImgs
@@ -686,18 +692,16 @@ const footerBgStyle = computed(() => {
 // CAROUSEL WALL  (mirrors apps/web SiteCarouselWall.vue)
 // ══════════════════════════════════════════════════════════════
 
-.pv-cw { position: relative; width: 100%; overflow: hidden; }
-.pv-cw-viewport { position: relative; width: 100%; }
-/* 作用中的 slide 改回 in-flow（relative）來撐出容器高度，其餘絕對定位淡出疊在後面，
-   圖片用 height:auto 照比例縮放、不裁切 */
+/* 響應式高度（依寬度等比縮放）；實際比例由 :style(cwContainerStyle) 依裝置覆寫 */
+.pv-cw { position: relative; width: 100%; overflow: hidden; aspect-ratio: 1920 / 600; max-height: 600px; }
+.pv-cw-viewport { position: relative; width: 100%; height: 100%; }
 .pv-cw-slide {
   position: absolute; inset: 0;
-  width: 100%;
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
 }
-.pv-cw-slide.active { position: relative; opacity: 1; z-index: 1; }
-.pv-cw-img { width: 100%; height: auto; display: block; }
+.pv-cw-slide.active { opacity: 1; z-index: 1; }
+.pv-cw-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pv-cw-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .pv-cw-text {
   position: absolute; inset: 0; z-index: 3;
