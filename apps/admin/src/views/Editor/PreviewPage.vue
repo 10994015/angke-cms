@@ -17,6 +17,11 @@
               <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
           </button>
+          <button class="device-btn" :class="{ active: device === 'eposter' }" @click="device = 'eposter'" title="電子刊版（1080px）">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/>
+            </svg>
+          </button>
           <button class="device-btn" :class="{ active: device === 'tablet' }" @click="device = 'tablet'" title="平板">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
@@ -226,9 +231,11 @@ onUnmounted(() => {
 .device-frame { position: relative; background: #0E7490; border-radius: 40px; box-shadow: 0 30px 80px rgba(8,145,178,0.35); overflow: hidden; flex-shrink: 0; }
 .device-frame--mobile { width: 390px; height: 80vh; max-height: 860px; border: 10px solid #0E7490; border-radius: 44px; box-sizing: content-box; }
 .device-frame--tablet { width: 768px; height: 80vh; max-height: 1080px; border: 12px solid #0E7490; border-radius: 20px; box-sizing: content-box; }
+.device-frame--eposter { width: 1080px; height: 80vh; max-height: 1080px; border: 12px solid #0E7490; border-radius: 16px; box-sizing: content-box; }
 
 .device-screen { background: #fff; border-radius: 34px; overflow-y: auto; overflow-x: hidden; height: 100%; width: 100%; position: relative; }
-.device-frame--tablet .device-screen { border-radius: 10px; }
+.device-frame--tablet .device-screen,
+.device-frame--eposter .device-screen { border-radius: 8px; }
 .device-screen::-webkit-scrollbar { width: 0; }
 .preview-area--desktop .device-screen::-webkit-scrollbar { width: 6px; }
 .preview-area--desktop .device-screen::-webkit-scrollbar-track { background: #f1f1f1; }

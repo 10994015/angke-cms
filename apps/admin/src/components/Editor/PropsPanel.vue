@@ -506,6 +506,22 @@
             </div>
           </div>
           <div class="prop-group">
+            <label class="prop-label">Hover 背景色</label>
+            <div class="color-row">
+              <input type="color" class="color-input" :value="v('hoverBgColor') || '#0E7490'" @input="up('hoverBgColor', $event.target.value)" />
+              <input type="text" class="prop-input" :value="v('hoverBgColor') || ''" @input="up('hoverBgColor', $event.target.value)" placeholder="留空＝不變色（沿用微透明）" />
+              <button v-if="v('hoverBgColor')" class="clear-btn" @click="up('hoverBgColor', '')">✕</button>
+            </div>
+          </div>
+          <div class="prop-group">
+            <label class="prop-label">Hover 文字色</label>
+            <div class="color-row">
+              <input type="color" class="color-input" :value="v('hoverTextColor') || '#ffffff'" @input="up('hoverTextColor', $event.target.value)" />
+              <input type="text" class="prop-input" :value="v('hoverTextColor') || ''" @input="up('hoverTextColor', $event.target.value)" placeholder="留空＝沿用文字色" />
+              <button v-if="v('hoverTextColor')" class="clear-btn" @click="up('hoverTextColor', '')">✕</button>
+            </div>
+          </div>
+          <div class="prop-group">
             <label class="prop-label">圓角</label>
             <input type="number" class="prop-input" min="0"
               :value="parseVal(v('borderRadius'), 'px').num"

@@ -84,7 +84,7 @@ const normalizedSlides = computed(() => {
   const imgs = props.frameData.caroiselWallImgs
   if (imgs?.length) {
     return imgs.map(item => ({
-      image:            getDeviceSrc(item, 'desktop'),
+      image:            getDeviceSrc(item, store.currentDevice),
       title:            item.title || '',
       subtitle:         item.subtitle || '',
       overlayOpacity:   item.overlayOpacity ?? 40,

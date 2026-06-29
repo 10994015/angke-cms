@@ -40,12 +40,12 @@ const editSiteId   = ref(null)
 const editLoading  = ref(false)
 const editSaving   = ref(false)
 const editError    = ref('')
-const editForm     = ref({ domainName: '', frontFamilyZhTw: '', frontFamilyZhCn: '', frontFamilyEnUs: '' })
+const editForm     = ref({ domainName: '', scale: 1, frontFamilyZhTw: '', frontFamilyZhCn: '', frontFamilyEnUs: '' })
 
 const openEdit = async (site) => {
   editSiteId.value = site.id
   editError.value  = ''
-  editForm.value   = { domainName: '', frontFamilyZhTw: '', frontFamilyZhCn: '', frontFamilyEnUs: '' }
+  editForm.value   = { domainName: '', scale: 1, frontFamilyZhTw: '', frontFamilyZhCn: '', frontFamilyEnUs: '' }
   editVisible.value = true
   editLoading.value = true
   try {
@@ -54,6 +54,7 @@ const openEdit = async (site) => {
       const d = res.data.data
       editForm.value = {
         domainName:      d.domainName      || '',
+        scale:           d.scale           ?? 1,
         frontFamilyZhTw: d.frontFamilyZhTw || '',
         frontFamilyZhCn: d.frontFamilyZhCn || '',
         frontFamilyEnUs: d.frontFamilyEnUs  || '',
@@ -469,6 +470,19 @@ onMounted(() => {
                 <span class="domain-readonly">{{ editForm.domainName || '—' }}</span>
               </div>
               <div class="edit-field-group">
+                <label class="field-label">整站縮放倍率 (scale)</label>
+                <input
+                  type="number"
+                  class="field-select"
+                  v-model.number="editForm.scale"
+                  min="0.1"
+                  max="5"
+                  step="0.1"
+                  placeholder="1"
+                />
+                <span class="field-hint">1 = 原始大小，例如 1.5 為放大 1.5 倍（前台以 CSS scale 套用整站）</span>
+              </div>
+              <div class="edit-field-group">
                 <label class="field-label">字型 — 繁體中文</label>
                 <select v-model="editForm.frontFamilyZhTw" class="field-select">
                   <option value="">（不設定）</option>
@@ -785,6 +799,13 @@ onMounted(() => {
   background: #fff;
   cursor: pointer;
   &:focus { border-color: #0891B2; box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.1); }
+}
+
+.field-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .field-input-full {

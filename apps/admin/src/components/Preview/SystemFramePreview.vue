@@ -270,11 +270,18 @@ const cwContainerStyle = computed(() => {
   return { aspectRatio: '1920 / 600', maxHeight: '600px' }
 })
 
+// 依目前裝置挑圖（fallback：手機→平板→桌機；平板→桌機）
+const cwSrc = (item) => {
+  if (props.device === 'mobile') return item.mobileSrc || item.tabletSrc || item.desktopSrc
+  if (props.device === 'tablet') return item.tabletSrc || item.desktopSrc
+  return item.desktopSrc
+}
+
 const cwNormalized = computed(() => {
   const imgs = props.frameData.caroiselWallImgs
   if (!imgs?.length) return []
   return imgs.map(item => ({
-    image:            item.desktopSrc || item.tabletSrc || item.mobileSrc,
+    image:            cwSrc(item),
     title:            item.title || '',
     subtitle:         item.subtitle || '',
     overlayOpacity:   item.overlayOpacity ?? 40,

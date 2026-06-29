@@ -8,7 +8,11 @@
           class="swiper-slide"
           :class="{ active: currentSlide === index }"
         >
-          <img :src="slide.image" :alt="slide.title || '輪播圖片'" class="slide-image" />
+          <picture class="slide-pic">
+            <source media="(max-width: 768px)" :srcset="slide.mobile" />
+            <source media="(max-width: 1024px)" :srcset="slide.tablet" />
+            <img :src="slide.desktop" :alt="slide.title || '輪播圖片'" class="slide-image" />
+          </picture>
           <div class="slide-overlay" :style="getOverlayStyle(slide)" />
           <div v-if="slide.title || slide.subtitle" class="slide-text-content">
             <h2 v-if="slide.title" class="slide-title" :style="getTitleStyle(slide)">{{ slide.title }}</h2>
@@ -43,7 +47,10 @@ const normalizedSlides = computed(() => {
   const imgs = props.frameData.caroiselWallImgs
   if (!imgs?.length) return []
   return imgs.map((item: any) => ({
-    image:           item.desktopSrc || item.tabletSrc || item.mobileSrc,
+    // 各裝置圖（含 fallback），由 <picture> 的 media source 依視窗寬度挑用
+    desktop:         item.desktopSrc || item.tabletSrc || item.mobileSrc,
+    tablet:          item.tabletSrc  || item.desktopSrc || item.mobileSrc,
+    mobile:          item.mobileSrc  || item.tabletSrc  || item.desktopSrc,
     title:           item.title || '',
     subtitle:        item.subtitle || '',
     overlayOpacity:  item.overlayOpacity ?? 40,
@@ -55,8 +62,9 @@ const normalizedSlides = computed(() => {
   }))
 })
 
+const PH_IMG = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&h=600&fit=crop'
 const PLACEHOLDER_SLIDES = [
-  { image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1280&h=600&fit=crop', title: '創新科技，引領未來', subtitle: 'Innovate · Transform · Lead', overlayOpacity: 40, overlayColor: '#000', titleColor: '#fff', titleFontSize: 48, subtitleColor: '#eee', subtitleFontSize: 20 },
+  { desktop: PH_IMG, tablet: PH_IMG, mobile: PH_IMG, title: '創新科技，引領未來', subtitle: 'Innovate · Transform · Lead', overlayOpacity: 40, overlayColor: '#000', titleColor: '#fff', titleFontSize: 48, subtitleColor: '#eee', subtitleFontSize: 20 },
 ]
 
 const displaySlides = computed(() => normalizedSlides.value.length ? normalizedSlides.value : PLACEHOLDER_SLIDES)
@@ -92,6 +100,7 @@ onUnmounted(stop)
 .swiper-wrapper { position: relative; width: 100%; height: 100%; }
 .swiper-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out; }
 .swiper-slide.active { opacity: 1; z-index: 1; }
+.slide-pic { display: contents; }
 .slide-image { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (max-width: 1024px) { .hero { aspect-ratio: 1024 / 450; max-height: 450px; } }
 @media (max-width: 768px)  { .hero { aspect-ratio: 1 / 1; max-height: none; } }

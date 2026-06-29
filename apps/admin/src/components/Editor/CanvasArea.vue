@@ -328,6 +328,7 @@ const addFirstSection = () => {
   min-height: calc(100% - 64px);
   height: fit-content;
 
+  &.device-eposter { max-width: 1080px; }
   &.device-tablet { max-width: 768px; }
   &.device-mobile { max-width: 390px; }
 }

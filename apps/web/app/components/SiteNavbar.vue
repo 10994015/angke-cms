@@ -153,6 +153,7 @@ const props = defineProps<{
   tabs:          { slug: string; name: string }[]
   currentSlug:   string
   pageTree?:     { slug: string; tab?: string; seoTitle?: string; children?: any[] }[]
+  scale?:        number
 }>()
 
 const config      = useRuntimeConfig()
@@ -161,7 +162,12 @@ const loginUrl    = config.public.loginUrl
 
 // ── Mobile / resize ───────────────────────────────────────────────────────────
 const navViewportWidth = ref(1280)
-const isMobile = computed(() => navViewportWidth.value <= 768)
+// scale 不等於 1（整站被 CSS 縮放）時，導航列一律改用漢堡選單，避免桌機橫向選單跑版
+const forceHamburger = computed(() => {
+  const s = Number(props.scale)
+  return Number.isFinite(s) && s !== 1
+})
+const isMobile = computed(() => forceHamburger.value || navViewportWidth.value <= 768)
 const updateMobile = () => { navViewportWidth.value = window.innerWidth }
 onMounted(() => {
   updateMobile()

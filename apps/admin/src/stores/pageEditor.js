@@ -13,7 +13,7 @@ export const makeDefaultElementValue = (type) => {
     case 'IMG':
       return { id: null, src: null, alt: '', width: '100%', height: 'auto', objectFit: 'cover' }
     case 'BUTTON':
-      return { text: '按鈕文字', link: '#', align: 'center', bgColor: '#0891B2', textColor: '#ffffff', fontSize: '16px', padding: '12px 32px', borderRadius: '6px' }
+      return { text: '按鈕文字', link: '#', align: 'center', bgColor: '#0891B2', textColor: '#ffffff', hoverBgColor: '', hoverTextColor: '', fontSize: '16px', padding: '12px 32px', borderRadius: '6px' }
     case 'CAROUSEL_IMG':
       return {
         height: 400,

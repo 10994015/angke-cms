@@ -31,6 +31,11 @@
             <rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>
           </svg>
         </button>
+        <button class="device-btn" :class="{ active: store.currentDevice === 'eposter' }" @click="store.setCurrentDevice('eposter')" title="電子刊版（1080px）">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/>
+          </svg>
+        </button>
         <button class="device-btn" :class="{ active: store.currentDevice === 'tablet' }" @click="store.setCurrentDevice('tablet')" title="平板版">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>

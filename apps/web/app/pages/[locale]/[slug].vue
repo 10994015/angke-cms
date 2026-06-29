@@ -50,6 +50,7 @@
               :tabs="visibleTabs"
               :current-slug="slug"
               :page-tree="pageTree"
+              :scale="siteData?.scale"
             />
 
             <!-- Footer -->
