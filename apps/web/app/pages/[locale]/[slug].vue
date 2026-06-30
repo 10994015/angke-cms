@@ -124,21 +124,17 @@ const siteFontStyle = computed(() => {
 const applyBodyZoom = (scale: unknown) => {
   if (!import.meta.client) return
   const numericScale = Number(scale)
-  document.body.style.zoom = Number.isFinite(numericScale) && numericScale > 0
+  const zoomValue = Number.isFinite(numericScale) && numericScale > 0
     ? String(numericScale)
     : ''
+  document.body.style.zoom = zoomValue
+  console.log('[zoom] applied:', zoomValue)
 }
 
-// 監看 siteData.scale 和 route，確保換頁時也會重新套用
-watch(
-  [() => siteData.value?.scale, () => route.path],
-  () => { applyBodyZoom(siteData.value?.scale) },
-  { immediate: true }
-)
-
-onUnmounted(() => {
-  if (!import.meta.client) return
-  document.body.style.zoom = ''
+// watchEffect 確保任何依賴改變時都重新套用
+watchEffect(() => {
+  const scale = siteData.value?.scale
+  applyBodyZoom(scale)
 })
 
 // ── Locales (from /api/web-site/locale) ───────────────────────────────────────
