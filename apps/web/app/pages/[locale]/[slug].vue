@@ -129,9 +129,10 @@ const applyBodyZoom = (scale: unknown) => {
     : ''
 }
 
+// 監看 siteData.scale 和 route，確保換頁時也會重新套用
 watch(
-  () => siteData.value?.scale,
-  (scale) => { applyBodyZoom(scale) },
+  [() => siteData.value?.scale, () => route.path],
+  () => { applyBodyZoom(siteData.value?.scale) },
   { immediate: true }
 )
 
