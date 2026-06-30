@@ -120,6 +120,27 @@ const siteFontStyle = computed(() => {
   return family ? { fontFamily: family } : {}
 })
 
+const applyBodyZoom = (scale: unknown) => {
+  if (!import.meta.client) return
+  const numericScale = Number(scale)
+  document.body.style.zoom = Number.isFinite(numericScale) && numericScale > 0
+    ? String(numericScale)
+    : ''
+}
+
+onMounted(() => {
+  watch(
+    () => siteData.value?.scale,
+    (scale) => { applyBodyZoom(scale) },
+    { immediate: true }
+  )
+})
+
+onUnmounted(() => {
+  if (!import.meta.client) return
+  document.body.style.zoom = ''
+})
+
 // ── Locales (from /api/web-site/locale) ───────────────────────────────────────
 
 const { data: localesData } = await useAsyncData<any>(
