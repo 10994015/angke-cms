@@ -120,6 +120,7 @@ const siteFontStyle = computed(() => {
   return family ? { fontFamily: family } : {}
 })
 
+// 監看 siteData.scale 並同步到 body.style.zoom（包括換頁時）
 const applyBodyZoom = (scale: unknown) => {
   if (!import.meta.client) return
   const numericScale = Number(scale)
@@ -128,13 +129,11 @@ const applyBodyZoom = (scale: unknown) => {
     : ''
 }
 
-onMounted(() => {
-  watch(
-    () => siteData.value?.scale,
-    (scale) => { applyBodyZoom(scale) },
-    { immediate: true }
-  )
-})
+watch(
+  () => siteData.value?.scale,
+  (scale) => { applyBodyZoom(scale) },
+  { immediate: true }
+)
 
 onUnmounted(() => {
   if (!import.meta.client) return
