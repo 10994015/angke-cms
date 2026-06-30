@@ -214,7 +214,8 @@ const handlePreview = () => {
   if (store.tenantId) {
     const slug   = store.currentPageSlug || 'home'
     const locale = store.currentLocale   || 'ZH-TW'
-    window.open(`/backend/editor/${store.tenantId}/preview?slug=${slug}&locale=${locale}`, '_blank')
+    const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+    window.open(`${baseUrl}/backend/editor/${store.tenantId}/preview?slug=${slug}&locale=${locale}`, '_blank')
   } else {
     showToast('示範模式無法預覽', 'info')
   }
