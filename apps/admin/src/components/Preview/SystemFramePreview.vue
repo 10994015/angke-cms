@@ -212,7 +212,8 @@ const isHeader = computed(() => HEADER_TYPES.includes(props.frameType))
 const isFooter = computed(() => FOOTER_TYPES.includes(props.frameType))
 const isCarouselWall = computed(() => props.frameType === 'CAROUSEL_WALL')
 const isFirstPicture = computed(() => props.frameType === 'FIRST_PICTURE')
-const isMobile = computed(() => props.device === 'mobile')
+// 非桌機（電子刊版 / 平板 / 手機）一律用漢堡選單，只有桌機顯示橫向選單
+const isMobile = computed(() => props.device !== 'desktop')
 
 const mobileOpen   = ref(false)
 const localeMenuOpen = ref(false)
@@ -752,14 +753,14 @@ const footerBgStyle = computed(() => {
 // ══════════════════════════════════════════════════════════════
 
 .pv-hero { width: 100%; position: relative; }
-/* grid 疊層：圖片照比例縮放不裁切，容器高度跟著圖片(或文字較高者)走 */
-.pv-hero-container { position: relative; width: 100%; display: grid; overflow: hidden; }
-.pv-hero-bg-img { grid-area: 1 / 1; align-self: start; width: 100%; height: auto; display: block; }
-/* 有設定固定高度時：圖片改為填滿容器（cover） */
-.pv-hero-container--fixed .pv-hero-bg-img { align-self: stretch; height: 100%; object-fit: cover; }
-.pv-hero-overlay { grid-area: 1 / 1; pointer-events: none; z-index: 1; }
+/* 圖片在流內決定容器高度；遮罩與文字絕對定位疊上，文字不會撐高區塊 → 圖片下方不留白 */
+.pv-hero-container { position: relative; width: 100%; overflow: hidden; }
+.pv-hero-bg-img { display: block; width: 100%; height: auto; }
+/* 有設定固定高度時：圖片填滿容器（cover） */
+.pv-hero-container--fixed .pv-hero-bg-img { height: 100%; object-fit: cover; }
+.pv-hero-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
 .pv-hero-content {
-  grid-area: 1 / 1; z-index: 2; width: 100%; max-width: 1200px; justify-self: center;
+  position: absolute; inset: 0; z-index: 2;
   padding: 0 40px; display: flex; align-items: center; justify-content: center;
 }
 .pv-hero-textbox { background: transparent; padding: 60px 80px; border-radius: 12px; text-align: center; max-width: 800px; width: 100%; }

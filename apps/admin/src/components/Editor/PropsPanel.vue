@@ -822,6 +822,23 @@ const logoUploading        = ref(false)
 const heroImgUploading     = ref(false)
 const carouselWallUploading = ref(false)
 
+// 依「目前畫布寬度 × 圖片原始比例」算出高度並填進 heroHeight。
+// force=false 時只在 heroHeight 為空才填（避免蓋掉使用者調過的值）
+const fillHeroHeightFromImage = (frame, force = false) => {
+  const src = frame?.data?.heroBgImgSrc
+  if (!src) return
+  if (!force && frame.data.heroHeight) return
+  const width = document.querySelector('.device-wrapper')?.clientWidth || 1280
+  const img = new Image()
+  img.onload = () => {
+    if (!img.naturalWidth) return
+    if (force || !frame.data.heroHeight) {
+      frame.data.heroHeight = `${Math.round(width * img.naturalHeight / img.naturalWidth)}px`
+    }
+  }
+  img.src = src
+}
+
 const handleHeroImgUpload = async (e) => {
   const file = e.target.files?.[0]
   if (!file) return
@@ -832,17 +849,23 @@ const handleHeroImgUpload = async (e) => {
   if (result && frame.data) {
     frame.data.heroBgImgSrc = result.fileUrl
     frame.data.heroBgImgId  = result.id
-    // 上傳後自動把「自然高度」填進高度欄位（依目前畫布寬度 × 圖片原始比例）
-    const width = document.querySelector('.device-wrapper')?.clientWidth || 1280
-    const img = new Image()
-    img.onload = () => {
-      if (img.naturalWidth) frame.data.heroHeight = `${Math.round(width * img.naturalHeight / img.naturalWidth)}px`
-    }
-    img.src = result.fileUrl
+    // 上傳後（含更換圖）重新算高度並覆蓋
+    fillHeroHeightFromImage(frame, true)
   }
   heroImgUploading.value = false
   e.target.value = ''
 }
+
+// 選到首圖時，若高度是空的就自動用圖片高度帶入，讓欄位不留空、使用者有起始值可調
+watch(
+  () => store.selected.frame,
+  (frame) => {
+    if (frame?.type === 'FIRST_PICTURE' && frame.data?.heroBgImgSrc && !frame.data.heroHeight) {
+      fillHeroHeightFromImage(frame)
+    }
+  },
+  { immediate: true }
+)
 
 const handleCarouselWallUpload = async (e) => {
   const file = e.target.files?.[0]

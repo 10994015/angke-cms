@@ -108,43 +108,38 @@ const subtitleStyle = computed(() => ({ color: subtitleColor.value, fontSize: su
   z-index: 10;
 }
 
-/* grid 疊層：圖片、遮罩、文字都放在同一格，容器高度＝圖片(依比例縮放)與文字較高者 */
+/* 圖片在流內、決定容器高度；遮罩與文字絕對定位疊在上面，
+   文字不會把區塊撐高 → 圖片下方不會留白 */
 .hero-container {
   position: relative;
   width: 100%;
-  display: grid;
   overflow: hidden;
 }
 
-/* 背景圖：照比例縮放、不裁切（高度跟著寬度走）。
-   align-self: start 避免被 grid 預設的 stretch 拉伸變形 */
+/* 自然高度：圖片依比例縮放，容器高度＝圖片高度 */
 .hero-bg-img {
-  grid-area: 1 / 1;
-  align-self: start;
+  display: block;
   width: 100%;
   height: auto;
-  display: block;
 }
 
-/* 有設定固定高度時：圖片改為填滿容器（cover），不再依自然高度 */
+/* 有設定固定高度時：圖片填滿容器（cover） */
 .hero-container--fixed .hero-bg-img {
-  align-self: stretch;
   height: 100%;
   object-fit: cover;
 }
 
 .hero-overlay {
-  grid-area: 1 / 1;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
   z-index: 1;
 }
 
 .hero-content {
-  grid-area: 1 / 1;
+  position: absolute;
+  inset: 0;
   z-index: 2;
-  width: 100%;
-  max-width: 1200px;
-  justify-self: center;
   padding: 0 40px;
   display: flex;
   align-items: center;

@@ -167,7 +167,9 @@ const forceHamburger = computed(() => {
   const s = Number(props.scale)
   return Number.isFinite(s) && s !== 1
 })
-const isMobile = computed(() => forceHamburger.value || navViewportWidth.value <= 768)
+// 只有桌機（>1080）顯示橫向選單；平板與電子刊版寬度(≤1080)以下一律漢堡
+const HAMBURGER_MAX_WIDTH = 1080
+const isMobile = computed(() => forceHamburger.value || navViewportWidth.value <= HAMBURGER_MAX_WIDTH)
 const updateMobile = () => { navViewportWidth.value = window.innerWidth }
 onMounted(() => {
   updateMobile()

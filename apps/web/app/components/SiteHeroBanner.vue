@@ -51,13 +51,13 @@ const subtitleStyle = computed(() => ({ color: subtitleColor.value, fontSize: su
 
 <style scoped>
 .hero-banner { width: 100%; position: relative; }
-/* grid 疊層：圖片照比例縮放不裁切，容器高度跟著圖片(或文字較高者)走 */
-.hero-container { position: relative; width: 100%; display: grid; overflow: hidden; }
-.hero-bg-img { grid-area: 1 / 1; align-self: start; width: 100%; height: auto; display: block; }
-/* 有設定固定高度時：圖片改為填滿容器（cover） */
-.hero-container--fixed .hero-bg-img { align-self: stretch; height: 100%; object-fit: cover; }
-.hero-overlay { grid-area: 1 / 1; pointer-events: none; z-index: 1; }
-.hero-content { grid-area: 1 / 1; z-index: 2; width: 100%; max-width: 1200px; justify-self: center; padding: 0 40px; display: flex; align-items: center; justify-content: center; }
+/* 圖片在流內決定容器高度；遮罩與文字絕對定位疊上，文字不會撐高區塊 → 圖片下方不留白 */
+.hero-container { position: relative; width: 100%; overflow: hidden; }
+.hero-bg-img { display: block; width: 100%; height: auto; }
+/* 有設定固定高度時：圖片填滿容器（cover） */
+.hero-container--fixed .hero-bg-img { height: 100%; object-fit: cover; }
+.hero-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.hero-content { position: absolute; inset: 0; z-index: 2; padding: 0 40px; display: flex; align-items: center; justify-content: center; }
 .text-box { background: transparent; padding: 60px 80px; border-radius: 12px; text-align: center; max-width: 800px; width: 100%; }
 .hero-title { font-size: 48px; font-weight: 700; color: #fff; margin: 0 0 20px; line-height: 1.2; }
 .hero-subtitle { font-size: 20px; color: #eee; margin: 0; line-height: 1.6; }
