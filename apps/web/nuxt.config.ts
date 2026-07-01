@@ -10,6 +10,7 @@ export default defineNuxtConfig({
   },
 
   app: {
+    baseURL: process.env.NUXT_PUBLIC_BASE_URL || '/',
     head: {
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -51,6 +52,7 @@ export default defineNuxtConfig({
       // Exposed to client (needs CORS)
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '',    // NUXT_PUBLIC_API_BASE
       webSiteId: process.env.NUXT_PUBLIC_WEB_SITE_ID || '',  // NUXT_PUBLIC_WEB_SITE_ID — same dev override for client-side nav
+      baseURL: process.env.NUXT_PUBLIC_BASE_URL || '/',   // NUXT_PUBLIC_BASE_URL — app base path prefix (e.g. '/cms/')
       defaultLocale: process.env.NUXT_PUBLIC_DEFAULT_LOCALE || 'zh-tw',
       defaultSlug: process.env.NUXT_PUBLIC_DEFAULT_SLUG || 'home',
       loginUrl: process.env.NUXT_PUBLIC_LOGIN_URL || '',     // NUXT_PUBLIC_LOGIN_URL

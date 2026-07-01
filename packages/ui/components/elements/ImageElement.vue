@@ -42,10 +42,22 @@ const props = defineProps<{
   val:        Record<string, any>
   meta?:      Record<string, any>
   editorHint?: boolean
+  baseUrl?: string
 }>()
 
 // 編輯器上傳提示底圖：用變數綁定（而非靜態 src），避免打包器把 public 路徑當 import 解析
-const defaultImg = '/images/default.png'
+const envPrefixBaseUrl = (() => {
+  const rawPrefix = (import.meta.env.VITE_URL_PREFIX || '').trim()
+  return rawPrefix ? `/${rawPrefix.replace(/^\/+|\/+$/g, '')}/` : '/'
+})()
+
+const normalizedBaseUrl = computed(() => {
+  const base = (props.baseUrl ?? import.meta.env.BASE_URL ?? '/').trim()
+  const normalized = base ? (base.endsWith('/') ? base : `${base}/`) : '/'
+  if (normalized === '/' && envPrefixBaseUrl !== '/') return envPrefixBaseUrl
+  return normalized
+})
+const defaultImg = computed(() => `${normalizedBaseUrl.value}images/default.png`)
 
 // 前台且有設定連結時，才包超連結（編輯器內不導頁，方便選取編輯）
 const hasLink = computed(() => !props.editorHint && !!props.val.src && !!props.val.link)

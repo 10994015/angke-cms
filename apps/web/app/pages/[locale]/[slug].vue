@@ -120,6 +120,23 @@ const siteFontStyle = computed(() => {
   return family ? { fontFamily: family } : {}
 })
 
+// 監看 siteData.scale 並同步到 body.style.zoom（包括換頁時）
+const applyBodyZoom = (scale: unknown) => {
+  if (!import.meta.client) return
+  const numericScale = Number(scale)
+  const zoomValue = Number.isFinite(numericScale) && numericScale > 0
+    ? String(numericScale)
+    : ''
+  document.body.style.zoom = zoomValue
+  console.log('[zoom] applied:', zoomValue)
+}
+
+// watchEffect 確保任何依賴改變時都重新套用
+watchEffect(() => {
+  const scale = siteData.value?.scale
+  applyBodyZoom(scale)
+})
+
 // ── Locales (from /api/web-site/locale) ───────────────────────────────────────
 
 const { data: localesData } = await useAsyncData<any>(

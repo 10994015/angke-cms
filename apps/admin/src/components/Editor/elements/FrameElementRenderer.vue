@@ -63,7 +63,7 @@ const type            = computed(() => props.element?.type)
 const val             = computed(() => props.element?.value    || {})
 const meta            = computed(() => props.element?.metadata || {})
 const currentComponent = computed(() => ELEMENT_MAP[type.value] ?? null)
-const extraProps       = computed(() => type.value === 'IMG' ? { editorHint: true } : {})
+const extraProps       = computed(() => type.value === 'IMG' ? { editorHint: true, baseUrl: import.meta.env.BASE_URL } : {})
 </script>
 
 <style scoped lang="scss">
