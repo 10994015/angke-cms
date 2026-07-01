@@ -170,7 +170,7 @@
 
     <!-- ── FIRST_PICTURE（鏡像前台 SiteHeroBanner） ── -->
     <div v-else-if="isFirstPicture" class="pv-hero">
-      <div class="pv-hero-container">
+      <div class="pv-hero-container" :class="{ 'pv-hero-container--fixed': pvHeroHeight }" :style="pvHeroHeight ? { height: pvHeroHeight } : {}">
         <img :src="heroBg" class="pv-hero-bg-img" alt="" />
         <div class="pv-hero-overlay" :style="heroOverlayStyle" />
         <div class="pv-hero-content">
@@ -328,6 +328,13 @@ const heroFd = (camel, snake, fallback) => {
   const val = props.frameData[camel] ?? props.frameData[snake]
   return val !== undefined && val !== null ? val : fallback
 }
+
+// 高度：留空＝依圖片自然高度（null）；有值＝套該固定高度（圖片 cover 填滿）
+const pvHeroHeight = computed(() => {
+  const h = props.frameData.heroHeight ?? props.frameData.hero_height
+  if (h == null || String(h).trim() === '') return null
+  return (typeof h === 'number' || /^\d+$/.test(String(h).trim())) ? `${h}px` : h
+})
 
 const heroBg       = computed(() => props.frameData.heroBgImgSrc ?? props.frameData.hero_bg_img_src ?? HERO_PLACEHOLDER_BG)
 const heroTitle    = computed(() => props.frameData.heroTitle ?? props.frameData.hero_title ?? '')
@@ -748,6 +755,8 @@ const footerBgStyle = computed(() => {
 /* grid 疊層：圖片照比例縮放不裁切，容器高度跟著圖片(或文字較高者)走 */
 .pv-hero-container { position: relative; width: 100%; display: grid; overflow: hidden; }
 .pv-hero-bg-img { grid-area: 1 / 1; align-self: start; width: 100%; height: auto; display: block; }
+/* 有設定固定高度時：圖片改為填滿容器（cover） */
+.pv-hero-container--fixed .pv-hero-bg-img { align-self: stretch; height: 100%; object-fit: cover; }
 .pv-hero-overlay { grid-area: 1 / 1; pointer-events: none; z-index: 1; }
 .pv-hero-content {
   grid-area: 1 / 1; z-index: 2; width: 100%; max-width: 1200px; justify-self: center;

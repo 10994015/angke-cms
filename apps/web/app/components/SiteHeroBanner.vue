@@ -1,6 +1,6 @@
 <template>
   <div class="hero-banner">
-    <div class="hero-container">
+    <div class="hero-container" :class="{ 'hero-container--fixed': heroHeight }" :style="heroHeight ? { height: heroHeight } : {}">
       <img :src="backgroundImage" class="hero-bg-img" alt="" />
       <div class="hero-overlay" :style="overlayStyle" />
       <div class="hero-content">
@@ -25,6 +25,13 @@ const fd = (camel: string, snake: string, fallback: any) => {
   return val !== undefined && val !== null ? val : fallback
 }
 
+// 高度：留空＝依圖片自然高度（null）；有值＝套該固定高度（圖片 cover 填滿）
+const heroHeight = computed(() => {
+  const h = props.frameData.heroHeight ?? props.frameData.hero_height
+  if (h == null || String(h).trim() === '') return null
+  return (typeof h === 'number' || /^\d+$/.test(String(h).trim())) ? `${h}px` : h
+})
+
 const backgroundImage  = computed(() => props.frameData.heroBgImgSrc ?? props.frameData.hero_bg_img_src ?? PLACEHOLDER_BG)
 const heroTitle        = computed(() => props.frameData.heroTitle ?? props.frameData.hero_title ?? '')
 const heroSubtitle     = computed(() => props.frameData.heroSubtitle ?? props.frameData.hero_subtitle ?? '')
@@ -47,6 +54,8 @@ const subtitleStyle = computed(() => ({ color: subtitleColor.value, fontSize: su
 /* grid 疊層：圖片照比例縮放不裁切，容器高度跟著圖片(或文字較高者)走 */
 .hero-container { position: relative; width: 100%; display: grid; overflow: hidden; }
 .hero-bg-img { grid-area: 1 / 1; align-self: start; width: 100%; height: auto; display: block; }
+/* 有設定固定高度時：圖片改為填滿容器（cover） */
+.hero-container--fixed .hero-bg-img { align-self: stretch; height: 100%; object-fit: cover; }
 .hero-overlay { grid-area: 1 / 1; pointer-events: none; z-index: 1; }
 .hero-content { grid-area: 1 / 1; z-index: 2; width: 100%; max-width: 1200px; justify-self: center; padding: 0 40px; display: flex; align-items: center; justify-content: center; }
 .text-box { background: transparent; padding: 60px 80px; border-radius: 12px; text-align: center; max-width: 800px; width: 100%; }

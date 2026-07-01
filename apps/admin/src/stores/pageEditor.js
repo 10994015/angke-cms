@@ -387,7 +387,7 @@ export const usePageEditorStore = defineStore('pageEditor', () => {
           heroBgImgSrc: null,
           heroTitle: '',
           heroSubtitle: '',
-          heroHeight: '600px',
+          heroHeight: '',
           overlayOpacity: 40,
           overlayColor: '#000000',
           titleColor: '#ffffff',

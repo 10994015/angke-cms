@@ -4,7 +4,7 @@
     :class="{ 'is-selected': isSelected, 'preview-mode': !isEditMode }"
     @click.stop="isEditMode ? handleClick() : null"
   >
-    <div class="hero-container">
+    <div class="hero-container" :class="{ 'hero-container--fixed': heroHeight }" :style="heroHeight ? { height: heroHeight } : {}">
       <img :src="backgroundImage" class="hero-bg-img" alt="" />
       <div class="hero-overlay" :style="overlayStyle"></div>
 
@@ -45,6 +45,13 @@ const fd = (camel, snake, fallback) => {
   const val = props.frameData[camel] ?? props.frameData[snake]
   return val !== undefined && val !== null ? val : fallback
 }
+
+// 高度：留空＝依圖片自然高度（null）；有值＝套該固定高度（圖片 cover 填滿）
+const heroHeight = computed(() => {
+  const h = props.frameData.heroHeight ?? props.frameData.hero_height
+  if (h == null || String(h).trim() === '') return null
+  return (typeof h === 'number' || /^\d+$/.test(String(h).trim())) ? `${h}px` : h
+})
 
 const backgroundImage = computed(() => props.frameData.heroBgImgSrc ?? props.frameData.hero_bg_img_src ?? PLACEHOLDER_BG)
 const heroTitle       = computed(() => props.frameData.heroTitle ?? props.frameData.hero_title ?? '')
@@ -117,6 +124,13 @@ const subtitleStyle = computed(() => ({ color: subtitleColor.value, fontSize: su
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* 有設定固定高度時：圖片改為填滿容器（cover），不再依自然高度 */
+.hero-container--fixed .hero-bg-img {
+  align-self: stretch;
+  height: 100%;
+  object-fit: cover;
 }
 
 .hero-overlay {

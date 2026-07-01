@@ -65,20 +65,21 @@
             <textarea class="prop-textarea" :value="frameData.heroSubtitle || ''" @input="setFrameData('heroSubtitle', $event.target.value)" rows="3" placeholder="副標題文字"></textarea>
           </div>
           <div class="prop-group">
-            <label class="prop-label">高度</label>
+            <label class="prop-label">高度（留空＝依圖片自然高度）</label>
             <div class="unit-row">
               <input type="number" class="prop-input unit-num" min="0"
                 :value="parseVal(frameData.heroHeight, 'px').num"
-                @input="setFrameData('heroHeight', $event.target.value + parseVal(frameData.heroHeight, 'px').unit)"
-                placeholder="600"
+                @input="setFrameData('heroHeight', $event.target.value === '' ? '' : $event.target.value + parseVal(frameData.heroHeight, 'px').unit)"
+                placeholder="高度"
               />
               <select class="unit-select"
                 :value="parseVal(frameData.heroHeight, 'px').unit"
-                @change="setFrameData('heroHeight', (parseVal(frameData.heroHeight, 'px').num || '600') + $event.target.value)"
+                @change="setFrameData('heroHeight', parseVal(frameData.heroHeight, 'px').num === '' ? '' : parseVal(frameData.heroHeight, 'px').num + $event.target.value)"
               >
                 <option value="px">px</option>
                 <option value="vh">vh</option>
               </select>
+              <button v-if="frameData.heroHeight" class="clear-btn" @click="setFrameData('heroHeight', '')">✕</button>
             </div>
           </div>
           <div class="prop-group">
@@ -831,6 +832,13 @@ const handleHeroImgUpload = async (e) => {
   if (result && frame.data) {
     frame.data.heroBgImgSrc = result.fileUrl
     frame.data.heroBgImgId  = result.id
+    // 上傳後自動把「自然高度」填進高度欄位（依目前畫布寬度 × 圖片原始比例）
+    const width = document.querySelector('.device-wrapper')?.clientWidth || 1280
+    const img = new Image()
+    img.onload = () => {
+      if (img.naturalWidth) frame.data.heroHeight = `${Math.round(width * img.naturalHeight / img.naturalWidth)}px`
+    }
+    img.src = result.fileUrl
   }
   heroImgUploading.value = false
   e.target.value = ''
